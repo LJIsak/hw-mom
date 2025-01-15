@@ -66,18 +66,23 @@ class AddCardDialog(QDialog):
         type_layout.addWidget(QLabel("Widget Type:"))
         self.type_combo = QComboBox()
         self.type_combo.addItems([
-            "Memory Widget",
-            "CPU Widget",
-            "CPU Graph",
-            "GPU Graph",
-            "GPU Temp Graph",
-            "CPU Temp",
-            "GPU Usage",
-            "GPU Temp",
+            "Circle",
+            "Graph",
             "Separator"
         ])
+        self.type_combo.currentTextChanged.connect(self._on_type_changed)
         type_layout.addWidget(self.type_combo)
         layout.addLayout(type_layout)
+        
+        # Subtype selection
+        subtype_layout = QHBoxLayout()
+        subtype_layout.addWidget(QLabel("Widget:"))
+        self.subtype_combo = QComboBox()
+        subtype_layout.addWidget(self.subtype_combo)
+        layout.addLayout(subtype_layout)
+        
+        # Initialize subtypes
+        self._on_type_changed(self.type_combo.currentText())
         
         # Dialog buttons
         buttons = QDialogButtonBox(
@@ -90,10 +95,48 @@ class AddCardDialog(QDialog):
         
         self.setLayout(layout)
     
+    def _on_type_changed(self, widget_type):
+        """Update subtype options based on selected type"""
+        self.subtype_combo.clear()
+        
+        if widget_type == "Circle":
+            self.subtype_combo.addItems([
+                "Memory Usage",
+                "CPU Usage",
+                "GPU Usage",
+                "GPU Temperature"
+            ])
+        elif widget_type == "Graph":
+            self.subtype_combo.addItems([
+                "CPU Usage",
+                "GPU Usage",
+                "GPU Temperature"
+            ])
+        else:  # Separator
+            self.subtype_combo.setEnabled(False)
+            return
+        
+        self.subtype_combo.setEnabled(True)
+    
     def get_values(self):
         """Return the dialog values"""
+        widget_type = self.type_combo.currentText()
+        subtype = self.subtype_combo.currentText()
+        
+        # Map selection to actual widget type
+        type_mapping = {
+            ("Circle", "Memory Usage"): "Memory Widget",
+            ("Circle", "CPU Usage"): "CPU Widget",
+            ("Circle", "GPU Usage"): "GPU Usage",
+            ("Circle", "GPU Temperature"): "GPU Temp",
+            ("Graph", "CPU Usage"): "CPU Graph",
+            ("Graph", "GPU Usage"): "GPU Graph",
+            ("Graph", "GPU Temperature"): "GPU Temp Graph",
+            ("Separator", ""): "Separator"
+        }
+        
         return {
             'position': (self.row_pos_spin.value(), self.col_pos_spin.value()),
             'size': (self.row_spin.value(), self.col_spin.value()),
-            'type': self.type_combo.currentText()
+            'type': type_mapping.get((widget_type, subtype), "Separator")
         } 

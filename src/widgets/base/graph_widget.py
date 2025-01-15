@@ -90,7 +90,7 @@ class GraphArea(QWidget):
             # Create gradient for fill
             gradient = QLinearGradient(0, 0, 0, height)
             fill_color = QColor("#a5c588")
-            fill_color.setAlpha(40)  # Make it very transparent
+            fill_color.setAlpha(60)  # Increased from 40 to 60 for more intensity
             gradient.setColorAt(0, fill_color)
             gradient.setColorAt(1, QColor(fill_color.red(), fill_color.green(), fill_color.blue(), 0))
             
