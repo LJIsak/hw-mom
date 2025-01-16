@@ -3,8 +3,8 @@ from collectors.system_metrics import SystemMetrics
 from ..base.graph_widget import GraphWidget
 
 class GPUTempGraphWidget(GraphWidget):
-    def __init__(self, parent=None):
-        super().__init__("GPU Temperature", parent)
+    def __init__(self, parent=None, accent_scheme='A'):
+        super().__init__("GPU Temp", parent, accent_scheme=accent_scheme)
         
         # Initialize metrics collector
         self.metrics = SystemMetrics()

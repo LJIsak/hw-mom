@@ -3,8 +3,8 @@ from collectors.system_metrics import SystemMetrics
 from ..base.circle_widget import CircleWidget
 
 class CPUWidget(CircleWidget):
-    def __init__(self, parent=None):
-        super().__init__("CPU Usage", parent)
+    def __init__(self, parent=None, accent_scheme='A'):
+        super().__init__("CPU", parent, accent_scheme=accent_scheme)
         
         # Initialize metrics collector
         self.metrics = SystemMetrics()

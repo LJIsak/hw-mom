@@ -1,0 +1,51 @@
+
+{
+    "light": {
+        "background": "#f2e4d4",
+        "card_background": "#fefefe", 
+        "card_background_2": "#f8f4f0",
+        "card_remove_button": "#db7240",
+        "card_remove_button_hover": "#c95f2c",
+        "card_remove_button_pressed": "#db7240",
+
+        "text_big": "#2f3237",
+        "text_small": "#0d0b17",
+
+        "add_button": "#a5c588",
+        "add_button_hover": "#8fad74",
+        "add_button_pressed": "#748f5b",
+        "edit_mode_button": "#f0bb8b",
+        "edit_mode_button_hover": "#e3a368",
+        "edit_mode_button_pressed": "#cc7f39",
+
+        "chart": "#a5c588",
+        "chart_2": "#f4bc89",
+        "chart_empty": "#f0f0f0",
+        "chart_legend": "#0d0b17"
+    },
+    
+    "dark": {
+        "background": "#081028",
+        "card_background": "#27293d", 
+        "card_background_2": "#0b1739",
+        "card_remove_button": "#db7240",
+        "card_remove_button_hover": "#c95f2c",
+        "card_remove_button_pressed": "#db7240",
+
+        "text_big": "#dddee0",
+        "text_small": "#660d0b17",
+
+        "add_button": "#a5c588",
+        "add_button_hover": "#8fad74",
+        "add_button_pressed": "#c95f2c",
+        "edit_mode_button": "#f0bb8b",
+        "edit_mode_button_hover": "#e3a368",
+        "edit_mode_button_pressed": "#cc7f39",
+
+        "chart": "#72d69b",
+        "chart_2": "#cb3cff",
+        "chart_empty": "#f0f0f0",
+        "chart_legend": "#77777e"
+    }
+}
+

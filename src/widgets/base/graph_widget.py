@@ -3,33 +3,7 @@ from PyQt6.QtCore import Qt, QTimer, QRectF
 from PyQt6.QtGui import (QPainter, QPen, QColor, QFont, 
                         QLinearGradient, QPainterPath)
 from .base_widget import BaseWidget
-
-class GraphWidget(BaseWidget):
-    def __init__(self, title: str, parent=None):
-        super().__init__(parent)
-        
-        # Create header label
-        self.header = QLabel(title)
-        self.header.setStyleSheet("""
-            QLabel {
-                color: rgba(13, 11, 23, 0.5);
-                font-size: 12px;
-                font-weight: 400;
-            }
-        """)
-        self.header.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        
-        # Set anti-aliased font for header
-        header_font = self.header.font()
-        header_font.setStyleStrategy(QFont.StyleStrategy.PreferAntialias)
-        self.header.setFont(header_font)
-        
-        # Create graph area
-        self.graph_area = GraphArea()
-        
-        # Add widgets to layout
-        self.layout.addWidget(self.header)
-        self.layout.addWidget(self.graph_area, 1)
+from theme_manager import theme
 
 class GraphArea(QWidget):
     def __init__(self, parent=None):
@@ -63,7 +37,8 @@ class GraphArea(QWidget):
         painter.setFont(font)
         
         # Draw horizontal lines and labels
-        line_color = QColor(13, 11, 23, 30)  # Very subtle lines
+        line_color = QColor("#0d0b17")
+        line_color.setAlpha(30)
         
         # Draw horizontal lines for percentages (including 0%)
         for percent in [0, 25, 50, 75, 100]:
@@ -89,8 +64,8 @@ class GraphArea(QWidget):
         if len(points) > 1:
             # Create gradient for fill
             gradient = QLinearGradient(0, 0, 0, height)
-            fill_color = QColor("#a5c588")
-            fill_color.setAlpha(60)  # Increased from 40 to 60 for more intensity
+            fill_color = self.parent()._get_accent_color()
+            fill_color.setAlpha(60)
             gradient.setColorAt(0, fill_color)
             gradient.setColorAt(1, QColor(fill_color.red(), fill_color.green(), fill_color.blue(), 0))
             
@@ -106,9 +81,42 @@ class GraphArea(QWidget):
             painter.fillPath(path, gradient)
             
             # Draw the line on top
-            painter.setPen(QPen(QColor("#a5c588"), 2, Qt.PenStyle.SolidLine))
+            painter.setPen(QPen(self.parent()._get_accent_color(), 2, Qt.PenStyle.SolidLine))
             for i in range(len(points) - 1):
                 painter.drawLine(
                     points[i][0], points[i][1],
                     points[i+1][0], points[i+1][1]
-                ) 
+                )
+
+class GraphWidget(BaseWidget):
+    def __init__(self, title: str, parent=None, accent_scheme='A'):
+        super().__init__(parent)
+        self.accent_scheme = accent_scheme
+        
+        # Create header label
+        self.header = QLabel(title)
+        self.header.setStyleSheet("""
+            QLabel {
+                color: rgba(13, 11, 23, 0.5);
+                font-size: 12px;
+                font-weight: 400;
+            }
+        """)
+        self.header.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        
+        # Set anti-aliased font for header
+        header_font = self.header.font()
+        header_font.setStyleStrategy(QFont.StyleStrategy.PreferAntialias)
+        self.header.setFont(header_font)
+        
+        # Create graph area
+        self.graph_area = GraphArea(self)  # Pass self as parent
+        
+        # Add widgets to layout
+        self.layout.addWidget(self.header)
+        self.layout.addWidget(self.graph_area, 1)
+    
+    def _get_accent_color(self):
+        """Get the appropriate accent color based on scheme"""
+        color_key = "chart_2" if self.accent_scheme == 'B' else "chart"
+        return theme.get_color(color_key) 

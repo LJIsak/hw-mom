@@ -3,8 +3,8 @@ from collectors.system_metrics import SystemMetrics
 from ..base.circle_widget import CircleWidget
 
 class GPUTempWidget(CircleWidget):
-    def __init__(self, parent=None):
-        super().__init__("GPU Temp", parent)
+    def __init__(self, parent=None, accent_scheme='A'):
+        super().__init__("GPU Temp", parent, accent_scheme=accent_scheme)
         
         # Initialize metrics collector
         self.metrics = SystemMetrics()

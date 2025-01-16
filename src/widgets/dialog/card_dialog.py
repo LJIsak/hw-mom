@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QSpinBox, QDialogButtonBox, QComboBox, QGroupBox)
+                            QSpinBox, QDialogButtonBox, QComboBox, QGroupBox,
+                            QRadioButton, QButtonGroup)
 from PyQt6.QtCore import Qt
 
 class AddCardDialog(QDialog):
@@ -84,6 +85,41 @@ class AddCardDialog(QDialog):
         # Initialize subtypes
         self._on_type_changed(self.type_combo.currentText())
         
+        # Add style selections group
+        style_group = QGroupBox("Style")
+        style_layout = QVBoxLayout()
+        
+        # Background color selection
+        bg_layout = QHBoxLayout()
+        bg_layout.addWidget(QLabel("Background:"))
+        self.bg_group = QButtonGroup()
+        self.bg_a = QRadioButton("A")
+        self.bg_b = QRadioButton("B")
+        self.bg_a.setChecked(True)
+        self.bg_group.addButton(self.bg_a, 1)
+        self.bg_group.addButton(self.bg_b, 2)
+        bg_layout.addWidget(self.bg_a)
+        bg_layout.addWidget(self.bg_b)
+        bg_layout.addStretch()
+        
+        # Accent color selection
+        accent_layout = QHBoxLayout()
+        accent_layout.addWidget(QLabel("Accent:"))
+        self.accent_group = QButtonGroup()
+        self.accent_a = QRadioButton("A")
+        self.accent_b = QRadioButton("B")
+        self.accent_a.setChecked(True)
+        self.accent_group.addButton(self.accent_a, 1)
+        self.accent_group.addButton(self.accent_b, 2)
+        accent_layout.addWidget(self.accent_a)
+        accent_layout.addWidget(self.accent_b)
+        accent_layout.addStretch()
+        
+        style_layout.addLayout(bg_layout)
+        style_layout.addLayout(accent_layout)
+        style_group.setLayout(style_layout)
+        layout.addWidget(style_group)
+        
         # Dialog buttons
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | 
@@ -138,5 +174,7 @@ class AddCardDialog(QDialog):
         return {
             'position': (self.row_pos_spin.value(), self.col_pos_spin.value()),
             'size': (self.row_spin.value(), self.col_spin.value()),
-            'type': type_mapping.get((widget_type, subtype), "Separator")
+            'type': type_mapping.get((widget_type, subtype), "Separator"),
+            'color_scheme': 'B' if self.bg_b.isChecked() else 'A',
+            'accent_scheme': 'B' if self.accent_b.isChecked() else 'A'
         } 

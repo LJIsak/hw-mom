@@ -13,28 +13,29 @@ from widgets.graph.cpu_graph import CPUGraphWidget
 from widgets.graph.gpu_graph import GPUGraphWidget
 from widgets.base.separator_card import SeparatorCard
 from widgets.graph.gpu_temp_graph import GPUTempGraphWidget
+from theme_manager import theme
 
 class FloatingButton(QPushButton):
     def __init__(self, parent=None):
         super().__init__("+", parent)
         self.setObjectName("floatingButton")
         self.setFixedSize(40, 40)
-        self.setStyleSheet("""
-            QPushButton#floatingButton {
-                background-color: #a5c588;
+        self.setStyleSheet(f"""
+            QPushButton#floatingButton {{
+                background-color: {theme.get_color("add_button").name()};
                 border-radius: 20px;
                 color: white;
                 font-size: 20px;
                 font-weight: bold;
                 border: none;
                 padding-top: -4px;
-            }
-            QPushButton#floatingButton:hover {
-                background-color: #8fad74;
-            }
-            QPushButton#floatingButton:pressed {
-                background-color: #c95f2c;
-            }
+            }}
+            QPushButton#floatingButton:hover {{
+                background-color: {theme.get_color("add_button_hover").name()};
+            }}
+            QPushButton#floatingButton:pressed {{
+                background-color: {theme.get_color("add_button_pressed").name()};
+            }}
         """)
 
 class EditModeButton(QPushButton):
@@ -42,29 +43,52 @@ class EditModeButton(QPushButton):
         super().__init__("-", parent)
         self.setObjectName("editModeButton")
         self.setFixedSize(40, 40)
-        self.setCheckable(True)  # Make the button toggleable
-        self.setStyleSheet("""
-            QPushButton#editModeButton {
-                background-color: #f0bb8b;
+        self.setCheckable(True)
+        self.setStyleSheet(f"""
+            QPushButton#editModeButton {{
+                background-color: {theme.get_color("edit_mode_button").name()};
                 border-radius: 20px;
                 color: white;
                 font-size: 20px;
                 font-weight: bold;
                 border: none;
                 padding-top: -4px;
-            }
-            QPushButton#editModeButton:hover {
-                background-color: #e3a368;
-            }
-            QPushButton#editModeButton:pressed, QPushButton#editModeButton:checked {
-                background-color: #cc7f39;
-            }
+            }}
+            QPushButton#editModeButton:hover {{
+                background-color: {theme.get_color("edit_mode_button_hover").name()};
+            }}
+            QPushButton#editModeButton:pressed, QPushButton#editModeButton:checked {{
+                background-color: {theme.get_color("edit_mode_button_pressed").name()};
+            }}
+        """)
+
+class ThemeButton(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__("☀", parent)
+        self.setObjectName("themeButton")
+        self.setFixedSize(28, 28)
+        self.setCheckable(True)
+        self.setStyleSheet(f"""
+            QPushButton#themeButton {{
+                background-color: #4f5359;
+                border-radius: 14px;
+                color: white;
+                font-size: 14px;
+                font-weight: normal;
+                border: none;
+            }}
+            QPushButton#themeButton:hover {{
+                background-color: #2f3237;
+            }}
+            QPushButton#themeButton:pressed {{
+                background-color: #191b1f;
+            }}
         """)
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Hardware Monitor")
+        self.setWindowTitle("HW-Mom")
         self.setMinimumSize(640, 480)
         
         # Create main widget and set it as central
@@ -73,13 +97,12 @@ class MainWindow(QMainWindow):
         
         # Set the background color
         palette = self.main_widget.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#f2e4d4"))
+        palette.setColor(QPalette.ColorRole.Window, theme.get_color("background"))
         self.main_widget.setAutoFillBackground(True)
         self.main_widget.setPalette(palette)
         
         # Initialize grid tracking
         self.grid_positions = {}  # {(row, col): card_widget}
-        self.grid_size = (22, 40)  # As per requirements
         
         # Track cards for edit mode
         self.cards = []
@@ -89,6 +112,9 @@ class MainWindow(QMainWindow):
         
         # Add floating buttons last so they're on top
         self._add_floating_buttons()
+        
+        # Initial theme
+        self._update_theme()
     
     def _init_ui(self):
         """Initialize the user interface"""
@@ -120,20 +146,28 @@ class MainWindow(QMainWindow):
         self.edit_button.clicked.connect(self._toggle_edit_mode)
         self.edit_button.raise_()
         
+        # Theme toggle button
+        self.theme_button = ThemeButton(self)
+        self.theme_button.clicked.connect(self._toggle_theme)
+        self.theme_button.raise_()
+        
         self._position_floating_buttons()
     
     def _position_floating_buttons(self):
         """Position the floating buttons"""
-        # Position add button
+        # Get common bottom position for all buttons
+        bottom_margin = 32
+        bottom_y = self.height() - bottom_margin - self.add_button.height()
+        
+        # Position add button (bottom right)
         add_button_x = self.width() - self.add_button.width() - 32
-        add_button_y = self.height() - self.add_button.height() - 32
-        self.add_button.move(add_button_x, add_button_y)
+        self.add_button.move(add_button_x, bottom_y)
         
         # Position edit button to the left of add button
-        self.edit_button.move(
-            add_button_x - self.edit_button.width() - 16,  # 16px spacing between buttons
-            add_button_y
-        )
+        self.edit_button.move(add_button_x - self.edit_button.width() - 16, bottom_y)
+        
+        # Position theme button (bottom left)
+        self.theme_button.move(32, bottom_y + self.theme_button.height()//2)
     
     def resizeEvent(self, event):
         """Handle window resize to reposition floating buttons"""
@@ -148,27 +182,95 @@ class MainWindow(QMainWindow):
             if hasattr(card, 'remove_btn'):
                 card.remove_btn.setVisible(show)
     
+    def _toggle_theme(self):
+        """Toggle between light and dark themes"""
+        if self.theme_button.isChecked():
+            theme.set_theme('dark')
+            self.theme_button.setText("☾")  # Moon emoji for dark mode
+        else:
+            theme.set_theme('light')
+            self.theme_button.setText("☀")  # Sun emoji for light mode
+        
+        self._update_theme()
+    
+    def _update_theme(self):
+        """Update the application theme"""
+        # Update background color
+        palette = self.main_widget.palette()
+        palette.setColor(QPalette.ColorRole.Window, theme.get_color("background"))
+        self.main_widget.setPalette(palette)
+        
+        # Update all cards
+        for card in self.cards:
+            card._update_style()
+    
     def _add_demo_cards(self):
         """Add initial demo cards"""
-        # First row: Memory widget, CPU widget, and GPU temp
-        self.add_card(row=0, col=0, size=(1, 1), widget_type=MemoryWidget)
-        self.add_card(row=0, col=1, size=(1, 1), widget_type=CPUWidget)
-        self.add_card(row=0, col=2, size=(1, 1), widget_type=GPUTempWidget)
+        # Define the initial layout
+        demo_layout = [
+            # First row: Memory (with accent B), CPU, GPU Temp (1x1 each)
+            [(0, 0, 1, 1, MemoryWidget, False, 'A', 'B'),  # Added accent scheme B
+             (0, 1, 1, 1, CPUWidget),
+             (0, 2, 1, 1, GPUTempWidget)],
+            
+            # Second row: CPU Graph (1x2) and GPU Temp Graph (1x1)
+            [(1, 0, 1, 2, CPUGraphWidget),
+             (1, 2, 1, 1, GPUTempGraphWidget)],
+            
+            # Third row: Separator (1x3)
+            [(2, 0, 1, 3, None, True)]  # Last True indicates transparent
+        ]
         
-        # Second row: CPU Graph and GPU Graph, each spanning 2 columns
-        self.add_card(row=1, col=0, size=(1, 2), widget_type=CPUGraphWidget)
-        self.add_card(row=1, col=2, size=(1, 2), widget_type=GPUTempGraphWidget)
+        # Calculate grid size from layout
+        max_row = 0
+        max_col = 0
         
-        # Third row: Separator spanning all columns
-        self.add_card(row=2, col=0, size=(1, 4), transparent=True)
+        # Process each row in the layout
+        for row in demo_layout:
+            for item in row:
+                row, col, row_span, col_span, *_ = item
+                max_row = max(max_row, row + row_span)
+                max_col = max(max_col, col + col_span)
+        
+        # Set grid size with some room for expansion
+        self.grid_size = (max_row + 1, max_col + 1)
+        
+        # Add the cards
+        for row in demo_layout:
+            for item in row:
+                if len(item) == 8:  # Full spec with color and accent schemes
+                    row, col, row_span, col_span, widget_type, transparent, color_scheme, accent_scheme = item
+                elif len(item) == 7:  # With color scheme
+                    row, col, row_span, col_span, widget_type, transparent, color_scheme = item
+                    accent_scheme = 'A'
+                elif len(item) == 6:  # With transparency
+                    row, col, row_span, col_span, widget_type, transparent = item
+                    color_scheme = 'A'
+                    accent_scheme = 'A'
+                else:  # Basic spec
+                    row, col, row_span, col_span, widget_type = item
+                    transparent = False
+                    color_scheme = 'A'
+                    accent_scheme = 'A'
+                
+                self.add_card(
+                    row=row,
+                    col=col,
+                    size=(row_span, col_span),
+                    widget_type=widget_type,
+                    transparent=transparent,
+                    color_scheme=color_scheme,
+                    accent_scheme=accent_scheme
+                )
     
-    def add_card(self, row, col, size=(1, 1), widget_type=None, transparent=False):
+    def add_card(self, row, col, size=(1, 1), widget_type=None, transparent=False, color_scheme='A', accent_scheme='A'):
         """Add a card at the specified position"""
         if not self._is_position_available(row, col, size):
             return False
         
         # Create card with widget if specified
-        card = Card(widget_type=widget_type, transparent=transparent)
+        card = Card(widget_type=widget_type, transparent=transparent, 
+                   color_scheme=color_scheme, accent_scheme=accent_scheme)
         
         # Set size based on grid spans
         base_width = 200
@@ -231,6 +333,7 @@ class MainWindow(QMainWindow):
             values = dialog.get_values()
             size = values['size']
             position = values['position']
+            color_scheme = values['color_scheme']
             
             # Map widget type string to class
             widget_types = {
@@ -253,14 +356,18 @@ class MainWindow(QMainWindow):
             # Check if the position is available
             row, col = position
             if self._is_position_available(row, col, size):
-                self.add_card(row, col, size, widget_type=widget_type, transparent=is_separator)
+                self.add_card(row, col, size, widget_type=widget_type, 
+                            transparent=is_separator, color_scheme=color_scheme,
+                            accent_scheme=values['accent_scheme'])
                 self._update_grid_layout()
             else:
                 # If requested position isn't available, find the first available one
                 new_position = self._find_available_position(size)
                 if new_position:
                     row, col = new_position
-                    self.add_card(row, col, size, widget_type=widget_type, transparent=is_separator)
+                    self.add_card(row, col, size, widget_type=widget_type, 
+                                transparent=is_separator, color_scheme=color_scheme,
+                                accent_scheme=values['accent_scheme'])
                     self._update_grid_layout()
     
     def _find_available_position(self, size):

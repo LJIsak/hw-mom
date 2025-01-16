@@ -3,18 +3,19 @@ from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF
 from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QBrush
 import math
 from .base_widget import BaseWidget
+from theme_manager import theme
 
 class CircularProgressLabel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Create the value label
         self.value_label = QLabel("--")
-        self.value_label.setStyleSheet("""
-            QLabel {
-                color: #10101e;
+        self.value_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.get_color("text_big").name()};
                 font-size: 32px;
                 font-weight: 500;
-            }
+            }}
         """)
         
         # Set anti-aliased font for value
@@ -54,12 +55,12 @@ class CircularProgressLabel(QWidget):
         )
         
         # Draw background circle
-        painter.setPen(QPen(QColor("#f0f0f0"), 4))
+        painter.setPen(QPen(theme.get_color("chart_empty"), 4))
         painter.drawArc(rect, 0, 360 * 16)
         
         # Draw progress
         if self.progress > 0:
-            progress_color = QColor("#a5c588")
+            progress_color = QColor(theme.get_color("chart"))
             painter.setPen(QPen(progress_color, 4))
             angle = int(self.progress * 360 * 16)
             painter.drawArc(rect, 90 * 16, angle)
@@ -84,14 +85,15 @@ class CircularProgressLabel(QWidget):
             )
 
 class CircleWidget(BaseWidget):
-    def __init__(self, title: str, parent=None):
+    def __init__(self, title: str, parent=None, accent_scheme='A'):
         super().__init__(parent)
+        self.accent_scheme = accent_scheme
         
         # Create header label
         self.header = QLabel(title)
         self.header.setStyleSheet("""
             QLabel {
-                color: rgba(13, 11, 23, 0.5);
+                color: #660d0b17;
                 font-size: 12px;
                 font-weight: 400;
             }
@@ -109,3 +111,8 @@ class CircleWidget(BaseWidget):
         # Add widgets to main layout
         self.layout.addWidget(self.header)
         self.layout.addWidget(self.circular_progress, 1) 
+    
+    def _get_accent_color(self):
+        """Get the appropriate accent color based on scheme"""
+        color_key = "chart_2" if self.accent_scheme == 'B' else "chart"
+        return theme.get_color(color_key) 
