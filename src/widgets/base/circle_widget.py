@@ -10,13 +10,7 @@ class CircularProgressLabel(QWidget):
         super().__init__(parent)
         # Create the value label
         self.value_label = QLabel("--")
-        self.value_label.setStyleSheet(f"""
-            QLabel {{
-                color: {theme.get_color("text_big").name()};
-                font-size: 32px;
-                font-weight: 500;
-            }}
-        """)
+        self._update_label_style()
         
         # Set anti-aliased font for value
         value_font = self.value_label.font()
@@ -36,9 +30,20 @@ class CircularProgressLabel(QWidget):
             QSizePolicy.Policy.Expanding
         )
     
+    def _update_label_style(self):
+        """Update the label style with current theme colors"""
+        self.value_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.get_color("text_big").name()};
+                font-size: 32px;
+                font-weight: 500;
+            }}
+        """)
+    
     def set_value(self, text, progress):
         self.value_label.setText(text)
         self.progress = progress
+        self._update_label_style()  # Update style when value changes
         self.update()  # Trigger repaint
     
     def paintEvent(self, event):
@@ -55,12 +60,15 @@ class CircularProgressLabel(QWidget):
         )
         
         # Draw background circle
-        painter.setPen(QPen(theme.get_color("chart_empty"), 4))
+        background_color = theme.get_color("chart_legend")
+        background_color.setAlpha(40)
+        painter.setPen(QPen(background_color, 4))
         painter.drawArc(rect, 0, 360 * 16)
         
         # Draw progress
         if self.progress > 0:
-            progress_color = QColor(theme.get_color("chart"))
+            # Get accent color from parent CircleWidget
+            progress_color = self.parent()._get_accent_color()
             painter.setPen(QPen(progress_color, 4))
             angle = int(self.progress * 360 * 16)
             painter.drawArc(rect, 90 * 16, angle)
@@ -76,7 +84,7 @@ class CircularProgressLabel(QWidget):
             
             # Draw dot
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QBrush(progress_color))
+            painter.setBrush(QBrush(progress_color))  # Use same accent color for dot
             dot_size = 12
             painter.drawEllipse(
                 QPointF(dot_x, dot_y),
@@ -91,12 +99,12 @@ class CircleWidget(BaseWidget):
         
         # Create header label
         self.header = QLabel(title)
-        self.header.setStyleSheet("""
-            QLabel {
-                color: #660d0b17;
+        self.header.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.get_color("text_small").name()};
                 font-size: 12px;
                 font-weight: 400;
-            }
+            }}
         """)
         self.header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         

@@ -13,6 +13,7 @@ from widgets.graph.cpu_graph import CPUGraphWidget
 from widgets.graph.gpu_graph import GPUGraphWidget
 from widgets.base.separator_card import SeparatorCard
 from widgets.graph.gpu_temp_graph import GPUTempGraphWidget
+from widgets.graph.gpu_memory_graph import GPUMemoryGraphWidget
 from theme_manager import theme
 
 class FloatingButton(QPushButton):
@@ -20,9 +21,22 @@ class FloatingButton(QPushButton):
         super().__init__("+", parent)
         self.setObjectName("floatingButton")
         self.setFixedSize(40, 40)
+        
+        # Get base color and create hover/pressed colors
+        base_color = theme.get_color("add_button")
+        hover_color = QColor(
+            int(base_color.red() * 0.9),
+            int(base_color.green() * 0.9),
+            int(base_color.blue() * 0.9)
+        )
+        pressed_color = QColor(
+            int(hover_color.red() * 0.8),
+            int(hover_color.green() * 0.8),
+            int(hover_color.blue() * 0.8)
+        )
         self.setStyleSheet(f"""
             QPushButton#floatingButton {{
-                background-color: {theme.get_color("add_button").name()};
+                background-color: {base_color.name()};
                 border-radius: 20px;
                 color: white;
                 font-size: 20px;
@@ -31,10 +45,10 @@ class FloatingButton(QPushButton):
                 padding-top: -4px;
             }}
             QPushButton#floatingButton:hover {{
-                background-color: {theme.get_color("add_button_hover").name()};
+                background-color: {hover_color.name()};
             }}
             QPushButton#floatingButton:pressed {{
-                background-color: {theme.get_color("add_button_pressed").name()};
+                background-color: {pressed_color.name()};
             }}
         """)
 
@@ -44,9 +58,22 @@ class EditModeButton(QPushButton):
         self.setObjectName("editModeButton")
         self.setFixedSize(40, 40)
         self.setCheckable(True)
+        
+        # Get base color and create darker version
+        base_color = theme.get_color("edit_mode_button")
+        hover_color = QColor(
+            int(base_color.red() * 0.9),
+            int(base_color.green() * 0.9),
+            int(base_color.blue() * 0.9)
+        )
+        pressed_color = QColor(
+            int(hover_color.red() * 1.0),
+            int(hover_color.green() * 0.8),
+            int(hover_color.blue() * 0.8)
+        )
         self.setStyleSheet(f"""
             QPushButton#editModeButton {{
-                background-color: {theme.get_color("edit_mode_button").name()};
+                background-color: {base_color.name()};
                 border-radius: 20px;
                 color: white;
                 font-size: 20px;
@@ -55,10 +82,10 @@ class EditModeButton(QPushButton):
                 padding-top: -4px;
             }}
             QPushButton#editModeButton:hover {{
-                background-color: {theme.get_color("edit_mode_button_hover").name()};
+                background-color: {hover_color.name()};
             }}
             QPushButton#editModeButton:pressed, QPushButton#editModeButton:checked {{
-                background-color: {theme.get_color("edit_mode_button_pressed").name()};
+                background-color: {pressed_color.name()};
             }}
         """)
 
@@ -209,13 +236,13 @@ class MainWindow(QMainWindow):
         # Define the initial layout
         demo_layout = [
             # First row: Memory (with accent B), CPU, GPU Temp (1x1 each)
-            [(0, 0, 1, 1, MemoryWidget, False, 'A', 'B'),  # Added accent scheme B
-             (0, 1, 1, 1, CPUWidget),
-             (0, 2, 1, 1, GPUTempWidget)],
+            [(0, 0, 1, 1, MemoryWidget, False, 'A', 'A'),
+             (0, 1, 1, 1, CPUWidget, False, 'B', 'A'),
+             (0, 2, 1, 1, GPUTempWidget, False, 'A', 'B')],
             
             # Second row: CPU Graph (1x2) and GPU Temp Graph (1x1)
             [(1, 0, 1, 2, CPUGraphWidget),
-             (1, 2, 1, 1, GPUTempGraphWidget)],
+             (1, 2, 1, 1, GPUTempGraphWidget, False, 'A', 'B')],
             
             # Third row: Separator (1x3)
             [(2, 0, 1, 3, None, True)]  # Last True indicates transparent
@@ -341,6 +368,7 @@ class MainWindow(QMainWindow):
                 "CPU Widget": CPUWidget,
                 "CPU Graph": CPUGraphWidget,
                 "GPU Graph": GPUGraphWidget,
+                "GPU Memory Graph": GPUMemoryGraphWidget,
                 "GPU Temp Graph": GPUTempGraphWidget,
                 "CPU Temp": CPUTempWidget,
                 "GPU Usage": GPUWidget,

@@ -27,10 +27,10 @@ class Card(QFrame):
         if not transparent:
             # Add shadow effect only for non-transparent cards
             shadow = QGraphicsDropShadowEffect(self)
-            shadow.setBlurRadius(20) # 15
+            shadow.setBlurRadius(30) # 15
             shadow.setXOffset(0)
-            shadow.setYOffset(2)
-            shadow.setColor(QColor(0, 0, 0, 30)) # 30
+            shadow.setYOffset(6)
+            shadow.setColor(QColor(0, 0, 0, 10)) # 30
             self.setGraphicsEffect(shadow)
     
     def _update_style(self):
@@ -42,6 +42,24 @@ class Card(QFrame):
             color_key = "card_background_2" if self.color_scheme == 'B' else "card_background"
             bg_color = theme.get_color(color_key).name()
         
+        # Get base color and create hover/pressed colors for remove button
+        base_color = theme.get_color("edit_mode_button")
+        base_color = QColor(
+            int(base_color.red() * 0.9),
+            int(base_color.green() * 0.72),
+            int(base_color.blue() * 0.72)
+        )
+        hover_color = QColor(
+            int(base_color.red() * 0.9),
+            int(base_color.green() * 0.9),
+            int(base_color.blue() * 0.9)
+        )
+        pressed_color = QColor(
+            int(hover_color.red() * 0.8),
+            int(hover_color.green() * 0.8),
+            int(hover_color.blue() * 0.8)
+        )
+        
         self.setStyleSheet(f"""
             QFrame#card {{
                 background-color: {bg_color};
@@ -50,7 +68,7 @@ class Card(QFrame):
             }}
             
             QPushButton#removeButton {{
-                background-color: {theme.get_color("card_remove_button").name()};
+                background-color: {base_color.name()};
                 border-radius: 12px;
                 color: white;
                 font-size: 14px;
@@ -66,11 +84,11 @@ class Card(QFrame):
             }}
             
             QPushButton#removeButton:hover {{
-                background-color: {theme.get_color("card_remove_button_hover").name()};
+                background-color: {hover_color.name()};
             }}
             
             QPushButton#removeButton:pressed {{
-                background-color: {theme.get_color("card_remove_button_pressed").name()};
+                background-color: {pressed_color.name()};
             }}
         """)
     

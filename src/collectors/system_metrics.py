@@ -61,3 +61,16 @@ class SystemMetrics:
     def get_cpu_history(self) -> list:
         """Get CPU usage history"""
         return self.cpu_history 
+    
+    def get_gpu_memory(self) -> Optional[float]:
+        """Get GPU memory usage percentage"""
+        try:
+            result = subprocess.run(
+                ['nvidia-smi', '--query-gpu=memory.used,memory.total', 
+                 '--format=csv,noheader,nounits'], 
+                capture_output=True, text=True, check=True
+            )
+            used, total = map(float, result.stdout.strip().split(','))
+            return (used / total) * 100
+        except (subprocess.SubprocessError, ValueError, OSError):
+            return None 

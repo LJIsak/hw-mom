@@ -12,8 +12,9 @@ class CPUWidget(CircleWidget):
         # Set up update timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_value)
-        self.timer.start(1000)  # Update every second
+        self.timer.start(500) # Use 1000 to update every second
         
+
         # Initial update
         self.update_value()
     
@@ -21,6 +22,6 @@ class CPUWidget(CircleWidget):
         """Update the displayed CPU usage"""
         usage = self.metrics.get_cpu_usage()
         self.circular_progress.set_value(
-            f"{usage:.1f}%",
+            f"{int(usage)}%",
             usage / 100.0  # Convert percentage to fraction
         ) 

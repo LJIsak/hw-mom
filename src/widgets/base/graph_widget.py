@@ -37,8 +37,8 @@ class GraphArea(QWidget):
         painter.setFont(font)
         
         # Draw horizontal lines and labels
-        line_color = QColor("#0d0b17")
-        line_color.setAlpha(30)
+        line_color = QColor(theme.get_color("chart_legend"))
+        line_color.setAlpha(100)
         
         # Draw horizontal lines for percentages (including 0%)
         for percent in [0, 25, 50, 75, 100]:
@@ -80,8 +80,8 @@ class GraphArea(QWidget):
             # Fill under the curve
             painter.fillPath(path, gradient)
             
-            # Draw the line on top
-            painter.setPen(QPen(self.parent()._get_accent_color(), 2, Qt.PenStyle.SolidLine))
+            # PLot graph line
+            painter.setPen(QPen(self.parent()._get_accent_color(), 2.5, Qt.PenStyle.SolidLine))
             for i in range(len(points) - 1):
                 painter.drawLine(
                     points[i][0], points[i][1],
@@ -95,12 +95,12 @@ class GraphWidget(BaseWidget):
         
         # Create header label
         self.header = QLabel(title)
-        self.header.setStyleSheet("""
-            QLabel {
-                color: rgba(13, 11, 23, 0.5);
+        self.header.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.get_color("text_small").name()};
                 font-size: 12px;
                 font-weight: 400;
-            }
+            }}
         """)
         self.header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         

@@ -146,7 +146,8 @@ class AddCardDialog(QDialog):
             self.subtype_combo.addItems([
                 "CPU Usage",
                 "GPU Usage",
-                "GPU Temperature"
+                "GPU Temperature",
+                "GPU Memory"
             ])
         else:  # Separator
             self.subtype_combo.setEnabled(False)
@@ -168,6 +169,7 @@ class AddCardDialog(QDialog):
             ("Graph", "CPU Usage"): "CPU Graph",
             ("Graph", "GPU Usage"): "GPU Graph",
             ("Graph", "GPU Temperature"): "GPU Temp Graph",
+            ("Graph", "GPU Memory"): "GPU Memory Graph",
             ("Separator", ""): "Separator"
         }
         
