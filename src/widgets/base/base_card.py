@@ -30,7 +30,7 @@ class Card(QFrame):
             shadow.setBlurRadius(30) # 15
             shadow.setXOffset(0)
             shadow.setYOffset(6)
-            shadow.setColor(QColor(0, 0, 0, 10)) # 30
+            shadow.setColor(QColor(0, 0, 0, 14)) # 30
             self.setGraphicsEffect(shadow)
     
     def _update_style(self):

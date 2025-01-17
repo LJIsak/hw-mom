@@ -3,7 +3,7 @@
     "light": {
         "background": "#f2e4d4",
         "card_background": "#fefefe", 
-        "card_background_2": "#f8f4f0",
+        "card_background_2": "#a5c588",
 
         "text_big": "#2f3237",
         "text_small": "#a7acb5",
@@ -18,13 +18,13 @@
     "dark": {
         "background": "#081028",
         "card_background": "#27293d", 
-        "card_background_2": "#1a1b26",
+        "card_background_2": "#27293d",
 
         "text_big": "#dadade",
-        "text_small": "#99999a",
+        "text_small": "#a7a7aa",
 
-        "add_button": "#54a638",
-        "edit_mode_button": "#feb95a",
+        "add_button": "#3a5244",
+        "edit_mode_button": "#593e54",
 
         "chart": "#72d69b",
         "chart_2": "#cb3cff",

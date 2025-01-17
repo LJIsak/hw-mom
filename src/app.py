@@ -21,7 +21,9 @@ class FloatingButton(QPushButton):
         super().__init__("+", parent)
         self.setObjectName("floatingButton")
         self.setFixedSize(40, 40)
-        
+        self._update_colors()
+    
+    def _update_colors(self):
         # Get base color and create hover/pressed colors
         base_color = theme.get_color("add_button")
         hover_color = QColor(
@@ -58,7 +60,9 @@ class EditModeButton(QPushButton):
         self.setObjectName("editModeButton")
         self.setFixedSize(40, 40)
         self.setCheckable(True)
-        
+        self._update_colors()
+    
+    def _update_colors(self):
         # Get base color and create darker version
         base_color = theme.get_color("edit_mode_button")
         hover_color = QColor(
@@ -219,6 +223,10 @@ class MainWindow(QMainWindow):
             self.theme_button.setText("☀")  # Sun emoji for light mode
         
         self._update_theme()
+        
+        # Update button colors
+        self.add_button._update_colors()
+        self.edit_button._update_colors()
     
     def _update_theme(self):
         """Update the application theme"""
@@ -237,7 +245,7 @@ class MainWindow(QMainWindow):
         demo_layout = [
             # First row: Memory (with accent B), CPU, GPU Temp (1x1 each)
             [(0, 0, 1, 1, MemoryWidget, False, 'A', 'A'),
-             (0, 1, 1, 1, CPUWidget, False, 'B', 'A'),
+             (0, 1, 1, 1, CPUWidget, False, 'B', 'B'),
              (0, 2, 1, 1, GPUTempWidget, False, 'A', 'B')],
             
             # Second row: CPU Graph (1x2) and GPU Temp Graph (1x1)
