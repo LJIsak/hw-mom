@@ -147,7 +147,8 @@ class AddCardDialog(QDialog):
                 "Memory Usage",
                 "CPU Usage",
                 "GPU Usage",
-                "GPU Temperature"
+                "GPU Temperature",
+                "GPU Memory"
             ])
         elif widget_type == "Graph":
             self.subtype_combo.addItems([
@@ -181,6 +182,7 @@ class AddCardDialog(QDialog):
             ("Circle", "CPU Usage"): "CPU Widget",
             ("Circle", "GPU Usage"): "GPU Usage",
             ("Circle", "GPU Temperature"): "GPU Temp",
+            ("Circle", "GPU Memory"): "GPU Memory",
             ("Graph", "CPU Usage"): "CPU Graph",
             ("Graph", "GPU Usage"): "GPU Graph",
             ("Graph", "GPU Temperature"): "GPU Temp Graph",

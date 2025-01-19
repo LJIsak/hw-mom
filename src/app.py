@@ -17,6 +17,7 @@ from widgets.graph.gpu_memory_graph import GPUMemoryGraphWidget
 from theme_manager import theme
 from widgets.text.cpu_text import CPUTextWidget
 from widgets.text.ping_text import PingTextWidget
+from widgets.circle.gpu_memory_circle import GPUMemoryWidget
 
 class FloatingButton(QPushButton):
     def __init__(self, parent=None):
@@ -323,7 +324,16 @@ class MainWindow(QMainWindow):
                     accent_scheme=accent_scheme
                 )
     
-    def add_card(self, row, col, size=(1, 1), widget_type=None, transparent=False, color_scheme='A', accent_scheme='A'):
+    def add_card(
+            self,
+            row, 
+            col, 
+            size=(1, 1),
+            widget_type=None, 
+            transparent=False, 
+            color_scheme='A', 
+            accent_scheme='A'
+        ):
         """Add a card at the specified position"""
         if not self._is_position_available(row, col, size):
             return False
@@ -406,6 +416,7 @@ class MainWindow(QMainWindow):
                 "CPU Temp": CPUTempWidget,
                 "GPU Usage": GPUWidget,
                 "GPU Temp": GPUTempWidget,
+                "GPU Memory": GPUMemoryWidget,
                 "Separator": lambda parent: None,
                 "CPU Text": CPUTextWidget,
                 "Ping Text": PingTextWidget,
