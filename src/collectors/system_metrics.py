@@ -1,12 +1,14 @@
 import psutil
 import subprocess
 from typing import Dict, List, Optional, Tuple
+from ping3 import ping
 
 class SystemMetrics:
     def __init__(self):
         """Initialize the system metrics collector"""
         self.cpu_history = []
         self.history_size = 60  # 60 seconds of history
+        self.ping_history = []
     
     def get_gpu_metrics(self) -> Optional[Tuple[float, float]]:
         """Get GPU temperature and utilization using nvidia-smi"""
@@ -74,3 +76,23 @@ class SystemMetrics:
             return (used / total) * 100
         except (subprocess.SubprocessError, ValueError, OSError):
             return None 
+    
+    def get_ping(self):
+        """Get ping time to Google DNS in milliseconds"""
+        try:
+            response_time = ping('8.8.8.8', timeout=2)
+            if response_time is not None:
+                # Convert to milliseconds and round to 1 decimal place
+                ms = round(response_time * 1000, 1)
+                self.ping_history.append(ms)
+                # Keep last 60 measurements
+                if len(self.ping_history) > 60:
+                    self.ping_history.pop(0)
+                return ms
+            return None
+        except Exception:
+            return None
+    
+    def get_ping_history(self):
+        """Get ping history"""
+        return self.ping_history 

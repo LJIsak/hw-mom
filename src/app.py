@@ -16,6 +16,7 @@ from widgets.graph.gpu_temp_graph import GPUTempGraphWidget
 from widgets.graph.gpu_memory_graph import GPUMemoryGraphWidget
 from theme_manager import theme
 from widgets.text.cpu_text import CPUTextWidget
+from widgets.text.ping_text import PingTextWidget
 
 class FloatingButton(QPushButton):
     def __init__(self, parent=None):
@@ -407,6 +408,7 @@ class MainWindow(QMainWindow):
                 "GPU Temp": GPUTempWidget,
                 "Separator": lambda parent: None,
                 "CPU Text": CPUTextWidget,
+                "Ping Text": PingTextWidget,
                 # Add other widget types here
             }
             widget_type = widget_types.get(values['type'])
