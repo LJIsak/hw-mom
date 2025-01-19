@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QSpinBox, QDialogButtonBox, QComboBox, QGroupBox,
-                            QRadioButton, QButtonGroup)
+                            QRadioButton, QButtonGroup, QFormLayout, QWidget)
 from PyQt6.QtCore import Qt
 
 class AddCardDialog(QDialog):
@@ -69,6 +69,7 @@ class AddCardDialog(QDialog):
         self.type_combo.addItems([
             "Circle",
             "Graph",
+            "Text",
             "Separator"
         ])
         self.type_combo.currentTextChanged.connect(self._on_type_changed)
@@ -87,11 +88,12 @@ class AddCardDialog(QDialog):
         
         # Add style selections group
         style_group = QGroupBox("Style")
-        style_layout = QVBoxLayout()
+        style_layout = QFormLayout()
         
         # Background color selection
-        bg_layout = QHBoxLayout()
-        bg_layout.addWidget(QLabel("Background:"))
+        bg_widget = QWidget()
+        bg_layout = QHBoxLayout(bg_widget)
+        bg_layout.setContentsMargins(0, 0, 0, 0)
         self.bg_group = QButtonGroup()
         self.bg_a = QRadioButton("A")
         self.bg_b = QRadioButton("B")
@@ -103,20 +105,25 @@ class AddCardDialog(QDialog):
         bg_layout.addStretch()
         
         # Accent color selection
-        accent_layout = QHBoxLayout()
-        accent_layout.addWidget(QLabel("Accent:"))
+        accent_widget = QWidget()
+        accent_layout = QHBoxLayout(accent_widget)
+        accent_layout.setContentsMargins(0, 0, 0, 0)
         self.accent_group = QButtonGroup()
         self.accent_a = QRadioButton("A")
         self.accent_b = QRadioButton("B")
+        self.accent_c = QRadioButton("C")
         self.accent_a.setChecked(True)
         self.accent_group.addButton(self.accent_a, 1)
         self.accent_group.addButton(self.accent_b, 2)
+        self.accent_group.addButton(self.accent_c, 3)
         accent_layout.addWidget(self.accent_a)
         accent_layout.addWidget(self.accent_b)
+        accent_layout.addWidget(self.accent_c)
         accent_layout.addStretch()
         
-        style_layout.addLayout(bg_layout)
-        style_layout.addLayout(accent_layout)
+        style_layout.addRow("Background:", bg_widget)
+        style_layout.addRow("Accent:", accent_widget)
+        
         style_group.setLayout(style_layout)
         layout.addWidget(style_group)
         
@@ -149,6 +156,13 @@ class AddCardDialog(QDialog):
                 "GPU Temperature",
                 "GPU Memory"
             ])
+        elif widget_type == "Text":
+            self.subtype_combo.addItems([
+                "CPU Usage",
+                "Memory Usage",
+                "GPU Usage",
+                "GPU Temperature"
+            ])
         else:  # Separator
             self.subtype_combo.setEnabled(False)
             return
@@ -170,7 +184,11 @@ class AddCardDialog(QDialog):
             ("Graph", "GPU Usage"): "GPU Graph",
             ("Graph", "GPU Temperature"): "GPU Temp Graph",
             ("Graph", "GPU Memory"): "GPU Memory Graph",
-            ("Separator", ""): "Separator"
+            ("Separator", ""): "Separator",
+            ("Text", "CPU Usage"): "CPU Text",
+            ("Text", "Memory Usage"): "Memory Text",
+            ("Text", "GPU Usage"): "GPU Text",
+            ("Text", "GPU Temperature"): "GPU Temp Text"
         }
         
         return {
@@ -178,5 +196,5 @@ class AddCardDialog(QDialog):
             'size': (self.row_spin.value(), self.col_spin.value()),
             'type': type_mapping.get((widget_type, subtype), "Separator"),
             'color_scheme': 'B' if self.bg_b.isChecked() else 'A',
-            'accent_scheme': 'B' if self.accent_b.isChecked() else 'A'
+            'accent_scheme': 'C' if self.accent_c.isChecked() else ('B' if self.accent_b.isChecked() else 'A')
         } 

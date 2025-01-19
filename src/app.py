@@ -15,6 +15,7 @@ from widgets.base.separator_card import SeparatorCard
 from widgets.graph.gpu_temp_graph import GPUTempGraphWidget
 from widgets.graph.gpu_memory_graph import GPUMemoryGraphWidget
 from theme_manager import theme
+from widgets.text.cpu_text import CPUTextWidget
 
 class FloatingButton(QPushButton):
     def __init__(self, parent=None):
@@ -99,22 +100,40 @@ class ThemeButton(QPushButton):
         self.setObjectName("themeButton")
         self.setFixedSize(28, 28)
         self.setCheckable(True)
+        self._update_colors()
+
+    def _update_colors(self):
+        # Get base color and create darker version
+        text_color = theme.get_color("text_small")
+        base_color = theme.get_color("card_background")
+        hover_color = QColor(
+            int(base_color.red() * 0.9),
+            int(base_color.green() * 0.9),
+            int(base_color.blue() * 0.9)
+        )
+        pressed_color = QColor(
+            int(hover_color.red() * 0.8),
+            int(hover_color.green() * 0.8),
+            int(hover_color.blue() * 0.8)
+        )
         self.setStyleSheet(f"""
             QPushButton#themeButton {{
-                background-color: #4f5359;
+                background-color: {base_color.name()};
                 border-radius: 14px;
-                color: white;
+                color: {text_color.name()};
                 font-size: 14px;
                 font-weight: normal;
                 border: none;
+                padding-top: -1px;
             }}
             QPushButton#themeButton:hover {{
-                background-color: #2f3237;
+                background-color: {hover_color.name()};
             }}
             QPushButton#themeButton:pressed {{
-                background-color: #191b1f;
+                background-color: {pressed_color.name()};
             }}
         """)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -238,6 +257,11 @@ class MainWindow(QMainWindow):
         # Update all cards
         for card in self.cards:
             card._update_style()
+            
+        # Update all buttons
+        self.add_button._update_colors()
+        self.edit_button._update_colors()
+        self.theme_button._update_colors()
     
     def _add_demo_cards(self):
         """Add initial demo cards"""
@@ -249,7 +273,7 @@ class MainWindow(QMainWindow):
              (0, 2, 1, 1, GPUTempWidget, False, 'A', 'B')],
             
             # Second row: CPU Graph (1x2) and GPU Temp Graph (1x1)
-            [(1, 0, 1, 2, CPUGraphWidget),
+            [(1, 0, 1, 2, CPUGraphWidget, False, 'A', 'C'),
              (1, 2, 1, 1, GPUTempGraphWidget, False, 'A', 'B')],
             
             # Third row: Separator (1x3)
@@ -382,6 +406,7 @@ class MainWindow(QMainWindow):
                 "GPU Usage": GPUWidget,
                 "GPU Temp": GPUTempWidget,
                 "Separator": lambda parent: None,
+                "CPU Text": CPUTextWidget,
                 # Add other widget types here
             }
             widget_type = widget_types.get(values['type'])

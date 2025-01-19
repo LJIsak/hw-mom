@@ -38,7 +38,7 @@ class GraphArea(QWidget):
         
         # Draw horizontal lines and labels
         line_color = QColor(theme.get_color("chart_legend"))
-        line_color.setAlpha(100)
+        line_color.setAlpha(160)
         
         # Draw horizontal lines for percentages (including 0%)
         for percent in [0, 25, 50, 75, 100]:
@@ -65,7 +65,7 @@ class GraphArea(QWidget):
             # Create gradient for fill
             gradient = QLinearGradient(0, 0, 0, height)
             fill_color = self.parent()._get_accent_color()
-            fill_color.setAlpha(60)
+            fill_color.setAlpha(128)
             gradient.setColorAt(0, fill_color)
             gradient.setColorAt(1, QColor(fill_color.red(), fill_color.green(), fill_color.blue(), 0))
             
@@ -118,5 +118,10 @@ class GraphWidget(BaseWidget):
     
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""
-        color_key = "chart_2" if self.accent_scheme == 'B' else "chart"
+        if self.accent_scheme == 'B':
+            color_key = "chart_2"
+        elif self.accent_scheme == 'C':
+            color_key = "chart_3"
+        else:
+            color_key = "chart"
         return theme.get_color(color_key) 

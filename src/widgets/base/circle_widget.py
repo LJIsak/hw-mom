@@ -122,5 +122,10 @@ class CircleWidget(BaseWidget):
     
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""
-        color_key = "chart_2" if self.accent_scheme == 'B' else "chart"
+        if self.accent_scheme == 'B':
+            color_key = "chart_2"
+        elif self.accent_scheme == 'C':
+            color_key = "chart_3"
+        else:
+            color_key = "chart"
         return theme.get_color(color_key) 
