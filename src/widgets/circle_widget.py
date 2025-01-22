@@ -4,6 +4,7 @@ from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QBrush
 import math
 from .base_widget import BaseWidget
 from theme_manager import theme
+from typing import Optional
 
 class CircularProgressLabel(QWidget):
     def __init__(self, parent=None):
@@ -93,8 +94,24 @@ class CircularProgressLabel(QWidget):
             )
 
 class CircleWidget(BaseWidget):
-    def __init__(self, title: str, parent=None, accent_scheme='A'):
-        super().__init__(parent)
+    """
+    A circular widget that shows a progress indicator and value.
+    Displays the current value of a metric as both a number and a circular progress bar.
+    
+    Args:
+        metric_str (str): The metric to display (e.g. "cpu_usage", "memory_usage")
+        system_metrics: The global SystemMetrics instance
+        title (str): The title shown above the circle
+        parent (Optional[QWidget]): Parent widget
+        accent_scheme (str): Color scheme to use ('A', 'B', or 'C')
+    """
+    def __init__(self, 
+                 metric_str: str,
+                 system_metrics,
+                 title: str,
+                 parent: Optional[QWidget] = None,
+                 accent_scheme: str = 'A'):
+        super().__init__(metric_str, system_metrics, parent)
         self.accent_scheme = accent_scheme
         
         # Create header label
@@ -114,11 +131,52 @@ class CircleWidget(BaseWidget):
         self.header.setFont(header_font)
         
         # Create circular progress with value
-        self.circular_progress = CircularProgressLabel()
+        self.circular_progress = CircularProgressLabel(self)
         
         # Add widgets to main layout
         self.layout.addWidget(self.header)
-        self.layout.addWidget(self.circular_progress, 1) 
+        self.layout.addWidget(self.circular_progress, 1)
+
+        # Setup update timer
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_display)
+        self.timer.start(system_metrics.update_interval)
+        
+        # Initial update
+        self.update_display()
+    
+    def update_display(self):
+        """Update the displayed value and progress."""
+        # Get history data by replacing '_usage' with '_history' in get_metric_from_string():
+        history_metric = self.metric_str.replace('_usage', '_history')
+        history = self.system_metrics.get_metric_from_string(history_metric)
+        
+        # Calculate a single 'current' value based on the size of history:
+        if isinstance(history, (int, float)):
+            current = history
+        elif len(history) >= 8:
+            current = sum(history[-8:]) / 8
+        else:
+            current = history[-1] if history else 0
+        
+        max_val = self.get_max_value()
+        
+        # Calculate relative value (0-1)
+        relative = current / max_val if max_val > 0 else 0
+        
+        # Format the display value based on the metric type
+        if 'memory' in self.metric_str:
+            display_text = f"{current:.1f}GB"
+        elif 'temp' in self.metric_str:
+            display_text = f"{current:.0f}°C"
+        elif any(x in self.metric_str for x in ['cpu', 'gpu']):
+            display_text = f"{current:.0f}%"
+        elif 'ping' in self.metric_str:
+            display_text = f"{current:.0f}ms"
+        else:
+            display_text = f"{current:.1f}"
+        
+        self.circular_progress.set_value(display_text, relative)
     
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""

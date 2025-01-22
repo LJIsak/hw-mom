@@ -1,28 +1,20 @@
-from PyQt6.QtWidgets import (QMainWindow, QWidget, QGridLayout, QSizePolicy, 
-                            QPushButton, QVBoxLayout)
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtWidgets import (
+    QMainWindow, QWidget, QGridLayout, QSizePolicy, QPushButton, QVBoxLayout)
+from PyQt6.QtCore import Qt, QPoint, QTimer
 from PyQt6.QtGui import QPalette, QColor
-from widgets.base.base_card import Card
-from widgets.dialog.card_dialog import AddCardDialog
-from widgets.circle.memory_circle import MemoryWidget
-from widgets.circle.cpu_circle import CPUWidget
-from widgets.circle.gpu_circle import GPUWidget
-from widgets.circle.cpu_temp_circle import CPUTempWidget
-from widgets.circle.gpu_temp_circle import GPUTempWidget
-from widgets.graph.cpu_graph import CPUGraphWidget
-from widgets.graph.gpu_graph import GPUGraphWidget
-from widgets.base.separator_card import SeparatorCard
-from widgets.graph.gpu_temp_graph import GPUTempGraphWidget
-from widgets.graph.gpu_memory_graph import GPUMemoryGraphWidget
+from widgets.base_card import Card
+from widgets.card_dialog import AddCardDialog
+from widgets.circle_widget import CircleWidget
+from widgets.graph_widget import GraphWidget
+from widgets.text_widget import TextWidget
+from widgets.separator_card import SeparatorCard
 from theme_manager import theme
-from widgets.text.cpu_text import CPUTextWidget
-from widgets.text.ping_text import PingTextWidget
-from widgets.circle.gpu_memory_circle import GPUMemoryWidget
+from collectors.system_metrics import SystemMetrics
 
-class FloatingButton(QPushButton):
+class AddCardButton(QPushButton):
     def __init__(self, parent=None):
         super().__init__("+", parent)
-        self.setObjectName("floatingButton")
+        self.setObjectName("addCardButton")
         self.setFixedSize(40, 40)
         self._update_colors()
     
@@ -30,9 +22,9 @@ class FloatingButton(QPushButton):
         # Get base color and create hover/pressed colors
         base_color = theme.get_color("add_button")
         hover_color = QColor(
-            int(base_color.red() * 0.9),
-            int(base_color.green() * 0.9),
-            int(base_color.blue() * 0.9)
+            int(base_color.red() * 0.8),
+            int(base_color.green() * 0.8),
+            int(base_color.blue() * 0.8)
         )
         pressed_color = QColor(
             int(hover_color.red() * 0.8),
@@ -40,7 +32,7 @@ class FloatingButton(QPushButton):
             int(hover_color.blue() * 0.8)
         )
         self.setStyleSheet(f"""
-            QPushButton#floatingButton {{
+            QPushButton#addCardButton {{
                 background-color: {base_color.name()};
                 border-radius: 20px;
                 color: white;
@@ -49,10 +41,10 @@ class FloatingButton(QPushButton):
                 border: none;
                 padding-top: -4px;
             }}
-            QPushButton#floatingButton:hover {{
+            QPushButton#addCardButton:hover {{
                 background-color: {hover_color.name()};
             }}
-            QPushButton#floatingButton:pressed {{
+            QPushButton#addCardButton:pressed {{
                 background-color: {pressed_color.name()};
             }}
         """)
@@ -69,12 +61,12 @@ class EditModeButton(QPushButton):
         # Get base color and create darker version
         base_color = theme.get_color("edit_mode_button")
         hover_color = QColor(
-            int(base_color.red() * 0.9),
-            int(base_color.green() * 0.9),
-            int(base_color.blue() * 0.9)
+            int(base_color.red() * 0.8),
+            int(base_color.green() * 0.8),
+            int(base_color.blue() * 0.8)
         )
         pressed_color = QColor(
-            int(hover_color.red() * 1.0),
+            int(hover_color.red() * 0.8),
             int(hover_color.green() * 0.8),
             int(hover_color.blue() * 0.8)
         )
@@ -109,9 +101,9 @@ class ThemeButton(QPushButton):
         text_color = theme.get_color("text_small")
         base_color = theme.get_color("card_background")
         hover_color = QColor(
-            int(base_color.red() * 0.9),
-            int(base_color.green() * 0.9),
-            int(base_color.blue() * 0.9)
+            int(base_color.red() * 0.8),
+            int(base_color.green() * 0.8),
+            int(base_color.blue() * 0.8)
         )
         pressed_color = QColor(
             int(hover_color.red() * 0.8),
@@ -136,12 +128,20 @@ class ThemeButton(QPushButton):
             }}
         """)
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("HW-Mom")
-        self.setMinimumSize(640, 480)
+        self.setMinimumSize(256, 128)
+        self.resize(640, 480)  # Set default starting size
+        
+        # Create the global SystemMetrics instance
+        self.system_metrics = SystemMetrics()
+        
+        # Setup metrics update timer
+        self.metrics_timer = QTimer()
+        self.metrics_timer.timeout.connect(self.system_metrics.update)
+        self.metrics_timer.start(self.system_metrics.update_interval)
         
         # Create main widget and set it as central
         self.main_widget = QWidget()
@@ -158,6 +158,9 @@ class MainWindow(QMainWindow):
         
         # Track cards for edit mode
         self.cards = []
+        
+        # Set initial grid size
+        self.grid_size = (3, 3)  # Starting with a 3x3 grid
         
         # Initialize UI
         self._init_ui()
@@ -181,15 +184,12 @@ class MainWindow(QMainWindow):
         # Add layouts to main layout
         main_layout.addLayout(self.grid_layout)
         
-        # Add initial demo cards
-        self._add_demo_cards()
-        
         self.main_widget.setLayout(main_layout)
     
     def _add_floating_buttons(self):
         """Add floating action buttons"""
         # Add button
-        self.add_button = FloatingButton(self)
+        self.add_button = AddCardButton(self)
         self.add_button.clicked.connect(self._add_card)
         self.add_button.raise_()
         
@@ -238,16 +238,12 @@ class MainWindow(QMainWindow):
         """Toggle between light and dark themes"""
         if self.theme_button.isChecked():
             theme.set_theme('dark')
-            self.theme_button.setText("☾")  # Moon emoji for dark mode
+            self.theme_button.setText("☾") # Moon emoji for dark mode
         else:
             theme.set_theme('light')
-            self.theme_button.setText("☀")  # Sun emoji for light mode
+            self.theme_button.setText("☀") # Sun emoji for light mode
         
         self._update_theme()
-        
-        # Update button colors
-        self.add_button._update_colors()
-        self.edit_button._update_colors()
     
     def _update_theme(self):
         """Update the application theme"""
@@ -265,239 +261,213 @@ class MainWindow(QMainWindow):
         self.edit_button._update_colors()
         self.theme_button._update_colors()
     
-    def _add_demo_cards(self):
-        """Add initial demo cards"""
-        # Define the initial layout
-        demo_layout = [
-            # First row: Memory (with accent B), CPU, GPU Temp (1x1 each)
-            [(0, 0, 1, 1, MemoryWidget, False, 'A', 'A'),
-             (0, 1, 1, 1, CPUWidget, False, 'B', 'B'),
-             (0, 2, 1, 1, GPUTempWidget, False, 'A', 'B')],
+    def _get_widget_info(self, widget_type: str) -> type:
+        """Get the widget class for a given widget type."""
+        widget_types = {
+            "Circle Widget": CircleWidget,
+            "Graph Widget": GraphWidget,
+            "Text Widget": TextWidget,
+            "Separator": None
+        }
+        return widget_types.get(widget_type)
+
+    def _get_metric_suffix(self, widget_type: str) -> str:
+        """Get the appropriate metric suffix based on widget type."""
+        if widget_type == "Graph Widget":
+            return "_history"
+        elif widget_type == "Circle Widget" or widget_type == "Text Widget":
+            return "_usage"
+        return ""
+
+    def _add_card(self):
+        """Show dialog and add card based on user input"""
+        dialog = AddCardDialog(self)
+        if dialog.exec():
+            values = dialog.get_values()
             
-            # Second row: CPU Graph (1x2) and GPU Temp Graph (1x1)
-            [(1, 0, 1, 2, CPUGraphWidget, False, 'A', 'C'),
-             (1, 2, 1, 1, GPUTempGraphWidget, False, 'A', 'B')],
-            
-            # Third row: Separator (1x3)
-            [(2, 0, 1, 3, None, True)]  # Last True indicates transparent
-        ]
-        
-        # Calculate grid size from layout
-        max_row = 0
-        max_col = 0
-        
-        # Process each row in the layout
-        for row in demo_layout:
-            for item in row:
-                row, col, row_span, col_span, *_ = item
-                max_row = max(max_row, row + row_span)
-                max_col = max(max_col, col + col_span)
-        
-        # Set grid size with some room for expansion
-        self.grid_size = (max_row + 1, max_col + 1)
-        
-        # Add the cards
-        for row in demo_layout:
-            for item in row:
-                if len(item) == 8:  # Full spec with color and accent schemes
-                    row, col, row_span, col_span, widget_type, transparent, color_scheme, accent_scheme = item
-                elif len(item) == 7:  # With color scheme
-                    row, col, row_span, col_span, widget_type, transparent, color_scheme = item
-                    accent_scheme = 'A'
-                elif len(item) == 6:  # With transparency
-                    row, col, row_span, col_span, widget_type, transparent = item
-                    color_scheme = 'A'
-                    accent_scheme = 'A'
-                else:  # Basic spec
-                    row, col, row_span, col_span, widget_type = item
-                    transparent = False
-                    color_scheme = 'A'
-                    accent_scheme = 'A'
-                
-                self.add_card(
-                    row=row,
-                    col=col,
-                    size=(row_span, col_span),
-                    widget_type=widget_type,
-                    transparent=transparent,
-                    color_scheme=color_scheme,
-                    accent_scheme=accent_scheme
+            # Get widget class
+            widget_class = self._get_widget_info(values['widget_type'])
+            if not widget_class:
+                # Handle separator
+                self._place_card(
+                    size=values['size'],
+                    requested_position=values['position'],
+                    widget_class=None,
+                    metric_str=None,
+                    is_separator=True,
+                    color_scheme=values['color_scheme'],
+                    accent_scheme=values['accent_scheme']
                 )
+                return
+
+            # Get base metric string and add appropriate suffix
+            base_metric = values['metric_str']
+            metric_suffix = self._get_metric_suffix(values['widget_type'])
+            final_metric = base_metric + metric_suffix
+
+            # Debug print to verify metric string
+            print(f"Creating widget with metric string: {final_metric}")
+
+            self._place_card(
+                size=values['size'],
+                requested_position=values['position'],
+                widget_class=widget_class,
+                metric_str=final_metric,
+                is_separator=False,
+                color_scheme=values['color_scheme'],
+                accent_scheme=values['accent_scheme']
+            )
     
-    def add_card(
-            self,
-            row, 
-            col, 
-            size=(1, 1),
-            widget_type=None, 
-            transparent=False, 
-            color_scheme='A', 
-            accent_scheme='A'
-        ):
-        """Add a card at the specified position"""
-        if not self._is_position_available(row, col, size):
-            return False
+    def _format_title(self, metric_str: str) -> str:
+        """Format metric string into a proper title."""
+        # Mapping of metric strings to display titles
+        metric_titles = {
+            'cpu_usage': 'CPU',
+            'memory_usage': 'Memory',
+            'gpu_usage': 'GPU',
+            'gpu_temp': 'GPU Temp',
+            'gpu_memory': 'GPU Memory',
+            'ping': 'Ping'
+        }
         
-        # Create card with widget if specified
-        card = Card(widget_type=widget_type, transparent=transparent, 
-                   color_scheme=color_scheme, accent_scheme=accent_scheme)
+        # Remove _history suffix if present
+        base_metric = metric_str.replace('_history', '')
         
-        # Set size based on grid spans
-        base_width = 200
-        base_height = 150
-        width = base_width * size[1]
-        height = base_height * size[0]
-        card.setMinimumSize(width, height)
+        # Return mapped title or fallback to formatted string
+        return metric_titles.get(base_metric, base_metric.replace('_', ' ').title())
+
+    def _place_card(self, size, requested_position, widget_class, metric_str,
+                   is_separator=False, color_scheme='A', accent_scheme='A'):
+        """Place a card in the grid, finding the best position if requested spot is taken."""
+        position = self._get_valid_position(requested_position, size)
+        if position:
+            row, col = position
+            self._create_and_add_card(
+                row, col, size, widget_class, metric_str,
+                is_separator, color_scheme, accent_scheme
+            )
+            self._update_grid_layout()
+
+    def _get_valid_position(self, requested_position, size):
+        """Get a valid position for the card, expanding grid if necessary."""
+        row, col = requested_position
+        rows, cols = size
+
+        # Expand grid if needed to accommodate the requested position
+        needed_rows = row + rows
+        needed_cols = col + cols
         
-        # Add remove button to card
-        card.add_remove_button(lambda: self._remove_card(row, col, size))
+        if needed_rows > self.grid_size[0] or needed_cols > self.grid_size[1]:
+            self.grid_size = (
+                max(self.grid_size[0], needed_rows),
+                max(self.grid_size[1], needed_cols)
+            )
+
+        # Check if position is available
+        if self._is_position_available(row, col, size):
+            return (row, col)
+
+        # If position is taken, find first available position
+        for r in range(self.grid_size[0]):
+            for c in range(self.grid_size[1]):
+                if self._is_position_available(r, c, size):
+                    return (r, c)
+
+        # If no position found, add to new row at the bottom
+        new_row = self.grid_size[0]
+        self.grid_size = (new_row + rows, max(self.grid_size[1], cols))
+        return (new_row, 0)
+
+    def _is_position_available(self, row, col, size):
+        """Check if a position is available for a card of given size."""
+        rows, cols = size
         
-        # Add to layout and track position
+        # Check if any position in the range is occupied
+        return not any(
+            (r, c) in self.grid_positions
+            for r in range(row, row + rows)
+            for c in range(col, col + cols)
+        )
+
+    def _create_and_add_card(self, row, col, size, widget_class, metric_str,
+                            is_separator, color_scheme, accent_scheme):
+        """Create and add a card to the specified position."""
+        if is_separator:
+            card = SeparatorCard(self)
+        else:
+            # Create the widget with the metric string and system metrics
+            widget = widget_class(
+                metric_str=metric_str,
+                system_metrics=self.system_metrics,
+                title=self._format_title(metric_str),
+                accent_scheme=accent_scheme
+            )
+            
+            # Create the card with the widget
+            card = Card(widget=widget, color_scheme=color_scheme)
+            card.remove_btn.clicked.connect(lambda: self._remove_card(card))
+            card.remove_btn.setVisible(self.edit_button.isChecked())
+        
+        # Add to grid and track position
         self.grid_layout.addWidget(card, row, col, size[0], size[1])
         
-        # Track occupied positions
+        # Update position tracking
         for r in range(row, row + size[0]):
             for c in range(col, col + size[1]):
                 self.grid_positions[(r, c)] = card
         
-        # Track card for edit mode
         self.cards.append(card)
-        
-        return True
-    
-    def _remove_card(self, row, col, size):
-        """Remove a card and free up its grid positions"""
-        if (row, col) not in self.grid_positions:
-            return
-        
-        card = self.grid_positions[(row, col)]
-        
-        # Remove from tracking lists
-        if card in self.cards:
-            self.cards.remove(card)
-        
-        # Remove from grid tracking
-        for r in range(row, row + size[0]):
-            for c in range(col, col + size[1]):
-                self.grid_positions.pop((r, c), None)
-        
-        # Remove from layout and delete
-        self.grid_layout.removeWidget(card)
-        card.deleteLater()
-    
-    def _is_position_available(self, row, col, size):
-        """Check if a position is available for a card of given size"""
-        if row + size[0] > self.grid_size[0] or col + size[1] > self.grid_size[1]:
-            return False
-            
-        for r in range(row, row + size[0]):
-            for c in range(col, col + size[1]):
-                if (r, c) in self.grid_positions:
-                    return False
-        return True
-    
-    def _add_card(self):
-        """Show dialog and add card based on user input"""
-        dialog = AddCardDialog(self, max_rows=self.grid_size[0], max_cols=self.grid_size[1])
-        if dialog.exec():
-            values = dialog.get_values()
-            size = values['size']
-            position = values['position']
-            color_scheme = values['color_scheme']
-            
-            # Map widget type string to class
-            widget_types = {
-                "Memory Widget": MemoryWidget,
-                "CPU Widget": CPUWidget,
-                "CPU Graph": CPUGraphWidget,
-                "GPU Graph": GPUGraphWidget,
-                "GPU Memory Graph": GPUMemoryGraphWidget,
-                "GPU Temp Graph": GPUTempGraphWidget,
-                "CPU Temp": CPUTempWidget,
-                "GPU Usage": GPUWidget,
-                "GPU Temp": GPUTempWidget,
-                "GPU Memory": GPUMemoryWidget,
-                "Separator": lambda parent: None,
-                "CPU Text": CPUTextWidget,
-                "Ping Text": PingTextWidget,
-                # Add other widget types here
-            }
-            widget_type = widget_types.get(values['type'])
-            
-            # Check if it's a separator
-            is_separator = values['type'] == "Separator"
-            
-            # Check if the position is available
-            row, col = position
-            if self._is_position_available(row, col, size):
-                self.add_card(row, col, size, widget_type=widget_type, 
-                            transparent=is_separator, color_scheme=color_scheme,
-                            accent_scheme=values['accent_scheme'])
-                self._update_grid_layout()
-            else:
-                # If requested position isn't available, find the first available one
-                new_position = self._find_available_position(size)
-                if new_position:
-                    row, col = new_position
-                    self.add_card(row, col, size, widget_type=widget_type, 
-                                transparent=is_separator, color_scheme=color_scheme,
-                                accent_scheme=values['accent_scheme'])
-                    self._update_grid_layout()
-    
-    def _find_available_position(self, size):
-        """Find first available position that fits the card size"""
-        rows, cols = size
-        
-        # Check each possible position
-        for row in range(self.grid_size[0]):
-            for col in range(self.grid_size[1]):
-                # Check if this position works
-                can_fit = True
-                
-                # Make sure we're not exceeding grid bounds
-                if row + rows > self.grid_size[0] or col + cols > self.grid_size[1]:
-                    continue
-                
-                # Check if all required positions are free
-                for r in range(row, row + rows):
-                    for c in range(col, col + cols):
-                        if (r, c) in self.grid_positions:
-                            can_fit = False
-                            break
-                    if not can_fit:
-                        break
-                
-                if can_fit:
-                    return (row, col)
-        
-        # If we get here, we need to expand the grid
-        return self._expand_grid_for_size(size)
-    
-    def _expand_grid_for_size(self, size):
-        """Expand grid if necessary and return new position"""
-        rows, cols = size
-        
-        # Find the first empty row
-        empty_row = 0
-        while any((empty_row, c) in self.grid_positions 
-                 for c in range(self.grid_size[1])):
-            empty_row += 1
-        
-        # If we need more columns, expand the grid
-        if self.grid_size[1] < cols:
-            self.grid_size = (self.grid_size[0], cols)
-        
-        # If we need more rows, expand the grid
-        if empty_row + rows > self.grid_size[0]:
-            self.grid_size = (empty_row + rows, self.grid_size[1])
-        
-        return (empty_row, 0)
-    
+
     def _update_grid_layout(self):
-        """Update grid layout properties based on current content"""
+        """Update grid layout properties and refresh the display."""
         # Update spacing based on grid size
         base_spacing = 16
         self.grid_layout.setSpacing(base_spacing)
         
-        # Emit layout changed signal
+        # Remove any empty rows/columns
+        self._compact_grid()
+        
+        # Force layout update
         self.grid_layout.update()
+    
+    def _compact_grid(self):
+        """Remove empty rows and columns from the grid."""
+        # Get all occupied positions
+        occupied_rows = set()
+        occupied_cols = set()
+        for pos in self.grid_positions.keys():
+            row, col = pos
+            occupied_rows.add(row)
+            occupied_cols.add(col)
+        
+        if not occupied_rows or not occupied_cols:
+            # If grid is empty, reset to 0x0
+            self.grid_size = (0, 0)
+            return
+        
+        # Update grid size to match actual content
+        self.grid_size = (
+            max(occupied_rows) + 1,
+            max(occupied_cols) + 1
+        )
+    
+    def _remove_card(self, card):
+        """Remove a card from the grid."""
+        # Find and remove all positions occupied by this card
+        positions_to_remove = []
+        for pos, c in self.grid_positions.items():
+            if c == card:
+                positions_to_remove.append(pos)
+        
+        for pos in positions_to_remove:
+            del self.grid_positions[pos]
+        
+        # Remove from cards list
+        self.cards.remove(card)
+        
+        # Remove from layout and delete
+        self.grid_layout.removeWidget(card)
+        card.deleteLater()
+        
+        # Update layout
+        self._update_grid_layout()

@@ -4,6 +4,7 @@ from PyQt6.QtGui import (QPainter, QPen, QColor, QFont,
                         QLinearGradient, QPainterPath)
 from .base_widget import BaseWidget
 from theme_manager import theme
+from typing import Optional, List
 
 class GraphArea(QWidget):
     def __init__(self, parent=None):
@@ -15,7 +16,7 @@ class GraphArea(QWidget):
         self.values = []
         self.max_points = 60  # Keep 60 seconds of history
     
-    def set_values(self, values):
+    def set_values(self, values: List[float]):
         """Update the values to plot"""
         self.values = values[-self.max_points:]  # Keep only last 60 values
     
@@ -89,8 +90,22 @@ class GraphArea(QWidget):
                 )
 
 class GraphWidget(BaseWidget):
-    def __init__(self, title: str, parent=None, accent_scheme='A'):
-        super().__init__(parent)
+    """
+    A widget that displays a metric's history as a line graph with gradient fill.
+    Shows the last 60 seconds of data with percentage-based Y-axis labels.
+    
+    Args:
+        metric_str (str): The metric history to display (e.g. "cpu_history", "memory_history")
+        system_metrics: The global SystemMetrics instance
+        title (str): The title shown above the graph
+        parent (Optional[QWidget]): Parent widget
+        accent_scheme (str): Color scheme to use ('A', 'B', or 'C')
+    """
+    def __init__(
+            self, metric_str: str, system_metrics, title: str, parent: Optional[QWidget] = None,
+            accent_scheme: str = 'A'
+        ):
+        super().__init__(metric_str, system_metrics, parent)
         self.accent_scheme = accent_scheme
         
         # Create header label
@@ -110,11 +125,33 @@ class GraphWidget(BaseWidget):
         self.header.setFont(header_font)
         
         # Create graph area
-        self.graph_area = GraphArea(self)  # Pass self as parent
+        self.graph_area = GraphArea(self)
         
         # Add widgets to layout
         self.layout.addWidget(self.header)
         self.layout.addWidget(self.graph_area, 1)
+
+        # Setup update timer with 1 second interval
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_display)
+        self.timer.start(1000)  # Update every 1000ms (1 second)
+        
+        # Initial update
+        self.update_display()
+
+    def update_display(self):
+        """Update the graph with latest history values."""
+        history = self.get_current_value()  # This will get the history array
+        max_val = self.get_max_value()
+        
+        # Convert values to percentages relative to max value
+        if max_val > 0:
+            percentage_values = [min(100, (val / max_val) * 100) for val in history]
+        else:
+            percentage_values = [0] * len(history)
+            
+        self.graph_area.set_values(percentage_values)
+        self.graph_area.update()  # Force repaint
     
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""
