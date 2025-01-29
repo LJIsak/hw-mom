@@ -28,8 +28,8 @@ class GraphArea(QWidget):
         width = self.width()
         height = self.height()
         padding = 8
-        label_width = 25  # Width reserved for labels
-        label_spacing = 4  # Space between labels and lines
+        label_width = 25 # Width reserved for labels
+        label_spacing = 4 # Space between labels and lines
         
         # Setup font for labels
         font = painter.font()
@@ -134,14 +134,14 @@ class GraphWidget(BaseWidget):
         # Setup update timer with 1 second interval
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_display)
-        self.timer.start(1000)  # Update every 1000ms (1 second)
+        self.timer.start(1000) # Update every 1000ms (1 second)
         
         # Initial update
         self.update_display()
 
     def update_display(self):
         """Update the graph with latest history values."""
-        history = self.get_current_value()  # This will get the history array
+        history = self.get_current_value()
         max_val = self.get_max_value()
         
         # Convert values to percentages relative to max value
@@ -151,7 +151,7 @@ class GraphWidget(BaseWidget):
             percentage_values = [0] * len(history)
             
         self.graph_area.set_values(percentage_values)
-        self.graph_area.update()  # Force repaint
+        self.graph_area.update() # Force repaint
     
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""

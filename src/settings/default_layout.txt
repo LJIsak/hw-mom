@@ -1,0 +1,1 @@
+[ circle gpu temp 1x1 color b]

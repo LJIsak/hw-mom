@@ -17,6 +17,7 @@ class SystemMetrics:
         self.collect_gpu_enabled = False
         self.collect_memory_enabled = False
         self.collect_ping_enabled = False
+        self.collect_fan_enabled = False
 
         self.update_interval = 500  # milliseconds
         self.history_size = int(60 / (self.update_interval / 1000))  # 60 seconds of history
@@ -28,6 +29,7 @@ class SystemMetrics:
         self.gpu_memory_history = [0]
         self.system_memory_history = [0]
         self.ping_history = [0]
+        self.fan_history = [0]
 
         # Max values (used to calculate relative usage for circle and graph widgets):
         self.max_system_memory = None
@@ -36,6 +38,7 @@ class SystemMetrics:
         self.max_gpu_memory = None
         self.max_gpu_temp = 100 # Always 100 celcius as max
         self.max_ping = 999 # always 999 ms as max
+        self.max_fan_speed = 5000  # Most PC fans max out around 3000-5000 RPM
 
         # Initialize max values and collect initial metrics
         self.update_max_values()
@@ -51,6 +54,8 @@ class SystemMetrics:
             self.collect_memory_metrics()
         if self.collect_ping_enabled:
             self.collect_ping()
+        if self.collect_fan_enabled:
+            self.collect_fan_metrics()
 
     def get_metric_from_string(self, string: str):
         """Returns a metric based on a string."""
@@ -100,6 +105,14 @@ class SystemMetrics:
         elif string == "ping_history":
             self.collect_ping_enabled = True
             return self.ping_history
+        
+        # Fan speed
+        elif string == "fan_speed":
+            self.collect_fan_enabled = True
+            return self.fan_history[-1] if self.fan_history else 0
+        elif string == "fan_speed_history":
+            self.collect_fan_enabled = True
+            return self.fan_history
             
         return 0
 
@@ -195,4 +208,37 @@ class SystemMetrics:
         # Keep only last 60 seconds worth of data
         if len(self.ping_history) > self.history_size:
             self.ping_history = self.ping_history[-self.history_size:]
+    
+    def collect_fan_metrics(self):
+        """Get fan speeds using psutil."""
+        try:
+            # Get all fans information
+            fans = psutil.sensors_fans()
+            
+            if fans:
+                # Calculate average RPM of all fans
+                total_rpm = 0
+                fan_count = 0
+                
+                for fan_name, entries in fans.items():
+                    for entry in entries:
+                        if entry.current > 0:  # Only count active fans
+                            total_rpm += entry.current
+                            fan_count += 1
+                
+                # Calculate average RPM
+                avg_rpm = total_rpm / max(fan_count, 1)
+                
+                # Update history
+                self.fan_history.append(avg_rpm)
+            else:
+                self.fan_history.append(0)
+                
+        except (AttributeError, IOError, OSError):
+            # In case of error, append 0
+            self.fan_history.append(0)
+        
+        # Keep only last 60 seconds worth of data
+        if len(self.fan_history) > self.history_size:
+            self.fan_history = self.fan_history[-self.history_size:]
     

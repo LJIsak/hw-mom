@@ -85,6 +85,7 @@ class AddCardDialog(QDialog):
             "GPU Usage",        # gpu_usage
             "GPU Temperature",  # gpu_temp
             "GPU Memory",       # gpu_memory
+            "Fan Speed",        # fan_speed
             "Ping"              # ping
         ])
         metric_layout.addWidget(self.metric_combo)
@@ -150,6 +151,7 @@ class AddCardDialog(QDialog):
             "GPU Usage": "gpu",
             "GPU Temperature": "gpu_temp",
             "GPU Memory": "gpu_memory",
+            "Fan Speed": "fan_speed",
             "Ping": "ping"
         }
         return metric_map.get(display_name, "")

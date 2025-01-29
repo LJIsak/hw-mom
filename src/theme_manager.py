@@ -11,7 +11,7 @@ class ThemeManager:
     
     def _load_themes(self):
         """Load themes from JSON file"""
-        theme_path = Path(__file__).parent / "themes" / "themes.json"
+        theme_path = Path(__file__).parent / "settings" / "themes.json"
         try:
             with open(theme_path, 'r') as f:
                 self._themes = json.load(f)

@@ -34,6 +34,8 @@ class BaseWidget(QWidget):
             self.system_metrics.collect_gpu_enabled = True
         elif 'memory' in metric_str:
             self.system_metrics.collect_memory_enabled = True
+        elif 'fan_speed' in metric_str:
+            self.system_metrics.collect_fan_enabled = True
         elif 'ping' in metric_str:
             self.system_metrics.collect_ping_enabled = True
 
@@ -50,10 +52,12 @@ class BaseWidget(QWidget):
             return self.system_metrics.max_gpu_memory
         elif 'gpu_temp' in self.metric_str:
             return self.system_metrics.max_gpu_temp
-        elif 'gpu' in self.metric_str:  # gpu usage
+        elif 'gpu' in self.metric_str:
             return self.system_metrics.max_gpu_usage
         elif 'memory' in self.metric_str:
             return self.system_metrics.max_system_memory
+        elif 'fan_speed' in self.metric_str:
+            return self.system_metrics.max_fan_speed
         elif 'ping' in self.metric_str:
             return self.system_metrics.max_ping
         return 100.0  # Default max value

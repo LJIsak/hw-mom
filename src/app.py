@@ -15,7 +15,7 @@ class AddCardButton(QPushButton):
     def __init__(self, parent=None):
         super().__init__("+", parent)
         self.setObjectName("addCardButton")
-        self.setFixedSize(40, 40)
+        self.setFixedSize(36, 36)
         self._update_colors()
     
     def _update_colors(self):
@@ -34,7 +34,7 @@ class AddCardButton(QPushButton):
         self.setStyleSheet(f"""
             QPushButton#addCardButton {{
                 background-color: {base_color.name()};
-                border-radius: 20px;
+                border-radius: 18px;
                 color: white;
                 font-size: 20px;
                 font-weight: bold;
@@ -53,7 +53,7 @@ class EditModeButton(QPushButton):
     def __init__(self, parent=None):
         super().__init__("-", parent)
         self.setObjectName("editModeButton")
-        self.setFixedSize(40, 40)
+        self.setFixedSize(36, 36)
         self.setCheckable(True)
         self._update_colors()
     
@@ -73,7 +73,7 @@ class EditModeButton(QPushButton):
         self.setStyleSheet(f"""
             QPushButton#editModeButton {{
                 background-color: {base_color.name()};
-                border-radius: 20px;
+                border-radius: 18px;
                 color: white;
                 font-size: 20px;
                 font-weight: bold;
