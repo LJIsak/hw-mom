@@ -20,7 +20,7 @@ class LayoutParser:
         parser = LayoutParser('settings/default_layout.txt')
         widgets = parser.widgets
 
-    The parser.widgets above will yield something like:
+    The parser.widgets above will yield a list of WidgetConfig objects that look something like:
         [WidgetConfig(widget_type='circle', metric='cpu', fromRow=0, fromCol=0, rowSpan=1, colSpan=1, color_scheme='a', is_separator=False),
         WidgetConfig(widget_type='circle', metric='gpu_temp', fromRow=0, fromCol=1, rowSpan=1, colSpan=1, color_scheme='b', is_separator=False),
         WidgetConfig(widget_type='circle', metric='gpu_memory', fromRow=0, fromCol=2, rowSpan=2, colSpan=1, color_scheme='c', is_separator=False),
