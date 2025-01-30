@@ -10,6 +10,8 @@ from widgets.text_widget import TextWidget
 from widgets.separator_card import SeparatorCard
 from theme_manager import theme
 from collectors.system_metrics import SystemMetrics
+from layout_parser import LayoutParser
+from pathlib import Path
 
 class AddCardButton(QPushButton):
     def __init__(self, parent=None):
@@ -170,6 +172,9 @@ class MainWindow(QMainWindow):
         
         # Initial theme
         self._update_theme()
+        
+        # Load default layout
+        self._load_layout()
     
     def _init_ui(self):
         """Initialize the user interface"""
@@ -183,7 +188,6 @@ class MainWindow(QMainWindow):
         
         # Add layouts to main layout
         main_layout.addLayout(self.grid_layout)
-        
         self.main_widget.setLayout(main_layout)
     
     def _add_floating_buttons(self):
@@ -322,19 +326,16 @@ class MainWindow(QMainWindow):
         """Format metric string into a proper title."""
         # Mapping of metric strings to display titles
         metric_titles = {
-            'cpu_usage': 'CPU',
-            'memory_usage': 'Memory',
-            'gpu_usage': 'GPU',
+            'cpu': 'CPU',
+            'memory': 'Memory',
+            'gpu': 'GPU',
             'gpu_temp': 'GPU Temp',
             'gpu_memory': 'GPU Memory',
             'ping': 'Ping'
         }
         
-        # Remove _history suffix if present
-        base_metric = metric_str.replace('_history', '')
-        
         # Return mapped title or fallback to formatted string
-        return metric_titles.get(base_metric, base_metric.replace('_', ' ').title())
+        return metric_titles.get(metric_str, metric_str.replace('_', ' ').title())
 
     def _place_card(self, size, requested_position, widget_class, metric_str,
                    is_separator=False, color_scheme='A', accent_scheme='A'):
@@ -342,6 +343,8 @@ class MainWindow(QMainWindow):
         position = self._get_valid_position(requested_position, size)
         if position:
             row, col = position
+            title = self._format_title(metric_str)
+            print(f"Creating card with metric: {metric_str}, title: {title}")  # Debug
             self._create_and_add_card(
                 row, col, size, widget_class, metric_str,
                 is_separator, color_scheme, accent_scheme
@@ -390,16 +393,20 @@ class MainWindow(QMainWindow):
         )
 
     def _create_and_add_card(self, row, col, size, widget_class, metric_str,
-                            is_separator, color_scheme, accent_scheme):
+                            is_separator=False, color_scheme='A', accent_scheme='A'):
         """Create and add a card to the specified position."""
         if is_separator:
             card = SeparatorCard(self)
         else:
+            # Get base title before adding suffix
+            base_metric = metric_str.replace('_usage', '').replace('_history', '')
+            title = self._format_title(base_metric)
+            
             # Create the widget with the metric string and system metrics
             widget = widget_class(
                 metric_str=metric_str,
                 system_metrics=self.system_metrics,
-                title=self._format_title(metric_str),
+                title=title,
                 accent_scheme=accent_scheme
             )
             
@@ -471,3 +478,37 @@ class MainWindow(QMainWindow):
         
         # Update layout
         self._update_grid_layout()
+
+    def _load_layout(self):
+        """Load and apply the default layout."""
+        layout_path = Path(__file__).parent / "settings" / "default_layout.txt"
+        parser = LayoutParser()
+        
+        try:
+            widgets, theme_name = parser.parse_file(str(layout_path))
+            
+            # Set theme
+            theme.set_theme(theme_name)
+            self._update_theme()
+            
+            # Create widgets
+            for widget_config in widgets:
+                self._place_card(
+                    size=widget_config.size,
+                    requested_position=widget_config.position,
+                    widget_class=self._get_widget_info(widget_config.widget_type),
+                    metric_str=widget_config.metric + self._get_metric_suffix(widget_config.widget_type),
+                    is_separator=(widget_config.widget_type == "Separator"),
+                    color_scheme=widget_config.color_scheme
+                )
+        
+        except Exception as e:
+            print(f"Error loading layout: {e}")
+            # Create a default widget if layout loading fails
+            self._place_card(
+                size=(1, 1),
+                requested_position=(0, 0),
+                widget_class=self._get_widget_info("Circle Widget"),
+                metric_str="cpu_usage",
+                color_scheme='A'
+            )

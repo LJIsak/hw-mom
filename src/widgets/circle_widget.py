@@ -112,7 +112,6 @@ class CircleWidget(BaseWidget):
                  parent: Optional[QWidget] = None,
                  accent_scheme: str = 'A'):
         super().__init__(metric_str, system_metrics, parent)
-        self.accent_scheme = accent_scheme
         
         # Create header label
         self.header = QLabel(title)
@@ -180,9 +179,9 @@ class CircleWidget(BaseWidget):
     
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""
-        if self.accent_scheme == 'B':
+        if self.color_scheme == 'B':
             color_key = "chart_2"
-        elif self.accent_scheme == 'C':
+        elif self.color_scheme == 'C':
             color_key = "chart_3"
         else:
             color_key = "chart"

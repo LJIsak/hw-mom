@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from typing import Optional
 
 class BaseWidget(QWidget):
@@ -26,6 +27,7 @@ class BaseWidget(QWidget):
         super().__init__(parent)
         self.metric_str = metric_str
         self.system_metrics = system_metrics
+        self.color_scheme = 'A'  # Default color scheme
         
         # Enable the appropriate collector based on the metric string
         if 'cpu' in metric_str:
@@ -76,3 +78,16 @@ class BaseWidget(QWidget):
         if isinstance(value, list):
             return value[-1] if value else 0
         return value 
+
+    def set_color_scheme(self, scheme: str):
+        """Set the color scheme for this widget."""
+        self.color_scheme = scheme
+        self.update()  # Trigger a repaint
+
+    def get_chart_color(self) -> QColor:
+        """Get the appropriate chart color based on color scheme."""
+        if self.color_scheme == 'B':
+            return theme.get_color("chart_2")
+        elif self.color_scheme == 'C':
+            return theme.get_color("chart_3")
+        return theme.get_color("chart")  # Default to chart color for scheme A 

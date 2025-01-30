@@ -47,6 +47,7 @@ class Card(QFrame):
     def __init__(self, widget=None, color_scheme='A'):
         super().__init__()
         self.setObjectName("card")
+        print(f"Creating card with color scheme: {color_scheme}")  # Debug
         self.color_scheme = color_scheme
         
         # Create layout
@@ -57,6 +58,9 @@ class Card(QFrame):
         # Add widget if specified
         if widget:
             self.widget = widget
+            # Pass color scheme to widget
+            if hasattr(widget, 'set_color_scheme'):
+                widget.set_color_scheme(color_scheme)
             self.layout.addWidget(widget)
         
         # Set up the card's appearance
@@ -75,9 +79,8 @@ class Card(QFrame):
     
     def _update_style(self):
         """Update the card's style based on current theme"""
-        # Use different background color based on scheme
-        color_key = "card_background_2" if self.color_scheme == 'B' else "card_background"
-        bg_color = theme.get_color(color_key).name()
+        # All cards use the same background color now
+        bg_color = theme.get_color("card_background").name()
         
         self.setStyleSheet(f"""
             QFrame#card {{

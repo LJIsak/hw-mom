@@ -23,7 +23,7 @@ In it, widgets are created with the following syntax:
 - `widget_type`: The type of widget to create.
     - Must be one of `graph`, `circle`, `text`, `separator`.
 - `metric`: The metric to display.
-    - Must be one of `cpu`, `gpu`, `ping`, `gpu temp`.
+    - Must be one of `cpu`, `gpu`, `gpu_temp`, `gpu_memory`, `ping`.
 - `height` and `width`: The height and width of the widget. 
     -  Must be integers.
 - `color_scheme`: The color scheme of the widget.
@@ -36,9 +36,9 @@ The default theme can be specified by adding either `theme: dark` or `theme: lig
 **Example 1:**
 ```
 theme: dark
-[gpu circle 2x2 color a][ping text 1x1][separator 2x1][gpu temp circle 2x2 color b]
-[                      ][ping text 1x1][             ][                           ]
-[cpu graph 2x6 color b]
+[circle gpu 2x2 color a][text ping 1x1][separator 2x1][circle gpu_temp 2x2 color b]
+[                      ][text ping 1x1][             ][                           ]
+[graph cpu 2x6 color b]
 [                     ]
 [separator 1x6]
 ```
@@ -46,5 +46,10 @@ This will create a layout with 5 rows (since there are 5 rows of text) and 6 col
 
 **Example 2:**
 ```
+[text ping 3x1][          graph gpu_temp 1x4         ]
+[             ][circle gpu 1x2][circle gpu_memory 1x2]
+[             ][           separator 1x4             ]
 ```
+This will create a layout with 3 rows (since there are 3 rows of text) and 5 columns (since the maximum sum of widths over all rows is 5).
 
+> Tip: because of dynamic resizing, there is no difference between two 1x1 widgets next to one another and two 2x2 widgets next to one another.
