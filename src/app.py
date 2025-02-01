@@ -186,6 +186,10 @@ class MainWindow(QMainWindow):
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(16)
         
+        # Set row/column stretch to make them uniform
+        self.grid_layout.setRowStretch(0, 1)
+        self.grid_layout.setColumnStretch(0, 1)
+        
         # Add layouts to main layout
         main_layout.addLayout(self.grid_layout)
         self.main_widget.setLayout(main_layout)
@@ -268,18 +272,18 @@ class MainWindow(QMainWindow):
     def _get_widget_info(self, widget_type: str) -> type:
         """Get the widget class for a given widget type."""
         widget_types = {
-            "Circle Widget": CircleWidget,
-            "Graph Widget": GraphWidget,
-            "Text Widget": TextWidget,
-            "Separator": None
+            "circle": CircleWidget,
+            "graph": GraphWidget,
+            "text": TextWidget,
+            "separator": None
         }
         return widget_types.get(widget_type)
 
     def _get_metric_suffix(self, widget_type: str) -> str:
         """Get the appropriate metric suffix based on widget type."""
-        if widget_type == "Graph Widget":
+        if widget_type == "graph":
             return "_history"
-        elif widget_type == "Circle Widget" or widget_type == "Text Widget":
+        elif widget_type == "circle" or widget_type == "text":
             return "_usage"
         return ""
 
@@ -350,6 +354,7 @@ class MainWindow(QMainWindow):
                 is_separator, color_scheme, accent_scheme
             )
             self._update_grid_layout()
+            print(f"Grid size: {self.grid_size}")
 
     def _get_valid_position(self, requested_position, size):
         """Get a valid position for the card, expanding grid if necessary."""
@@ -395,8 +400,12 @@ class MainWindow(QMainWindow):
     def _create_and_add_card(self, row, col, size, widget_class, metric_str,
                             is_separator=False, color_scheme='A', accent_scheme='A'):
         """Create and add a card to the specified position."""
+        print(f"Creating {'separator' if is_separator else 'widget'} card with color scheme: {color_scheme}")  # Debug
+        
         if is_separator:
             card = SeparatorCard(self)
+            # Set size policy for separator to expand
+            card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         else:
             # Get base title before adding suffix
             base_metric = metric_str.replace('_usage', '').replace('_history', '')
@@ -412,8 +421,13 @@ class MainWindow(QMainWindow):
             
             # Create the card with the widget
             card = Card(widget=widget, color_scheme=color_scheme)
-            card.remove_btn.clicked.connect(lambda: self._remove_card(card))
-            card.remove_btn.setVisible(self.edit_button.isChecked())
+            
+            # Set size policy for regular cards
+            card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        
+        # Add remove button and connect it (for both regular cards and separators)
+        card.remove_btn.clicked.connect(lambda: self._remove_card(card))
+        card.remove_btn.setVisible(self.edit_button.isChecked())
         
         # Add to grid and track position
         self.grid_layout.addWidget(card, row, col, size[0], size[1])
@@ -430,6 +444,12 @@ class MainWindow(QMainWindow):
         # Update spacing based on grid size
         base_spacing = 16
         self.grid_layout.setSpacing(base_spacing)
+        
+        # Set uniform row and column stretches
+        for i in range(self.grid_size[0]):
+            self.grid_layout.setRowStretch(i, 1)
+        for i in range(self.grid_size[1]):
+            self.grid_layout.setColumnStretch(i, 1)
         
         # Remove any empty rows/columns
         self._compact_grid()
@@ -482,23 +502,35 @@ class MainWindow(QMainWindow):
     def _load_layout(self):
         """Load and apply the default layout."""
         layout_path = Path(__file__).parent / "settings" / "default_layout.txt"
-        parser = LayoutParser()
+        parser = LayoutParser(str(layout_path))
         
         try:
-            widgets, theme_name = parser.parse_file(str(layout_path))
-            
             # Set theme
-            theme.set_theme(theme_name)
+            theme.set_theme(parser.theme_str)
             self._update_theme()
+            self.theme_button.setChecked(parser.theme_str == 'dark')
             
-            # Create widgets
-            for widget_config in widgets:
+            # Create widgets from parsed config
+            for widget_config in parser.widgets:
+                # Get widget class based on type
+                widget_class = self._get_widget_info(widget_config.widget_type)
+                
+                # Skip if invalid widget type
+                if widget_config.widget_type != "separator" and not widget_class:
+                    continue
+                
+                # Create metric string with appropriate suffix
+                metric_str = widget_config.metric
+                if not widget_config.is_separator:
+                    metric_str += self._get_metric_suffix(widget_config.widget_type)
+                
+                # Place the card
                 self._place_card(
-                    size=widget_config.size,
-                    requested_position=widget_config.position,
-                    widget_class=self._get_widget_info(widget_config.widget_type),
-                    metric_str=widget_config.metric + self._get_metric_suffix(widget_config.widget_type),
-                    is_separator=(widget_config.widget_type == "Separator"),
+                    size=(widget_config.rowSpan, widget_config.colSpan),
+                    requested_position=(widget_config.fromRow, widget_config.fromCol),
+                    widget_class=widget_class,
+                    metric_str=metric_str,
+                    is_separator=widget_config.is_separator,
                     color_scheme=widget_config.color_scheme
                 )
         
@@ -508,7 +540,7 @@ class MainWindow(QMainWindow):
             self._place_card(
                 size=(1, 1),
                 requested_position=(0, 0),
-                widget_class=self._get_widget_info("Circle Widget"),
+                widget_class=self._get_widget_info("circle"),
                 metric_str="cpu_usage",
                 color_scheme='A'
             )

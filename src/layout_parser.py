@@ -84,7 +84,7 @@ class LayoutParser:
                     rowSpan=int(widget_str.split('x')[0][-1]),
                     colSpan=int(widget_str.split('x')[1][0]),
                     color_scheme=color,
-                    is_separator='separator' in widget_str
+                    is_separator=True if 'separator' in widget_str else False
                 )
                 self.widgets.append(temp_widget)
 

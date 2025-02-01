@@ -11,10 +11,13 @@ An ultra-lightweight hardware monitoring application for Windows that displays s
 ## Installation
 Just install bro.
 
+## Limitations
+- GPU metrics currently only supported on NVIDIA GPUs.
+- CPU temperature and fan speed currenyly not supported on Windows.
 
 # How to create a layout
 
-When the app is lauched, it loads the layout defined in the `default_layout.txt` text file.
+When the app is lauched, it loads the layout defined in the `settings/default_layout.txt` text file.
 
 In it, widgets are created with the following syntax: 
 `[{widget_type} {metric} {height}x{width} {color_scheme}]` 
@@ -53,3 +56,6 @@ This will create a layout with 5 rows (since there are 5 rows of text) and 6 col
 This will create a layout with 3 rows (since there are 3 rows of text) and 5 columns (since the maximum sum of widths over all rows is 5).
 
 > Tip: because of dynamic resizing, there is no difference between two 1x1 widgets next to one another and two 2x2 widgets next to one another.
+
+# Themes
+The available themes can be modified by editing the `settings/themes.json` file. See `settings/sample_themes.json` for examples.
