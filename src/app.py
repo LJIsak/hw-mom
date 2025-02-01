@@ -186,10 +186,6 @@ class MainWindow(QMainWindow):
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(16)
         
-        # Set row/column stretch to make them uniform
-        self.grid_layout.setRowStretch(0, 1)
-        self.grid_layout.setColumnStretch(0, 1)
-        
         # Add layouts to main layout
         main_layout.addLayout(self.grid_layout)
         self.main_widget.setLayout(main_layout)
@@ -198,7 +194,7 @@ class MainWindow(QMainWindow):
         """Add floating action buttons"""
         # Add button
         self.add_button = AddCardButton(self)
-        self.add_button.clicked.connect(self._add_card)
+        self.add_button.clicked.connect(self._add_card_from_dialog)
         self.add_button.raise_()
         
         # Edit mode button
@@ -286,8 +282,23 @@ class MainWindow(QMainWindow):
         elif widget_type == "circle" or widget_type == "text":
             return "_usage"
         return ""
-
-    def _add_card(self):
+    
+    def _format_title(self, metric_str: str) -> str:
+        """Format metric string into a proper title."""
+        # Mapping of metric strings to display titles
+        metric_titles = {
+            'cpu': 'CPU',
+            'memory': 'Memory',
+            'gpu': 'GPU',
+            'gpu_temp': 'GPU Temp',
+            'gpu_memory': 'GPU Memory',
+            'ping': 'Ping'
+        }
+        
+        # Return mapped title or fallback to formatted string
+        return metric_titles.get(metric_str, metric_str.replace('_', ' ').title())
+    
+    def _add_card_from_dialog(self):
         """Show dialog and add card based on user input"""
         dialog = AddCardDialog(self)
         if dialog.exec():
@@ -325,87 +336,26 @@ class MainWindow(QMainWindow):
                 color_scheme=values['color_scheme'],
                 accent_scheme=values['accent_scheme']
             )
-    
-    def _format_title(self, metric_str: str) -> str:
-        """Format metric string into a proper title."""
-        # Mapping of metric strings to display titles
-        metric_titles = {
-            'cpu': 'CPU',
-            'memory': 'Memory',
-            'gpu': 'GPU',
-            'gpu_temp': 'GPU Temp',
-            'gpu_memory': 'GPU Memory',
-            'ping': 'Ping'
-        }
-        
-        # Return mapped title or fallback to formatted string
-        return metric_titles.get(metric_str, metric_str.replace('_', ' ').title())
 
-    def _place_card(self, size, requested_position, widget_class, metric_str,
-                   is_separator=False, color_scheme='A', accent_scheme='A'):
-        """Place a card in the grid, finding the best position if requested spot is taken."""
-        position = self._get_valid_position(requested_position, size)
-        if position:
-            row, col = position
-            title = self._format_title(metric_str)
-            print(f"Creating card with metric: {metric_str}, title: {title}")  # Debug
-            self._create_and_add_card(
-                row, col, size, widget_class, metric_str,
-                is_separator, color_scheme, accent_scheme
-            )
-            self._update_grid_layout()
-            print(f"Grid size: {self.grid_size}")
-
-    def _get_valid_position(self, requested_position, size):
-        """Get a valid position for the card, expanding grid if necessary."""
+    def _place_card(
+            self, size, requested_position, widget_class, metric_str, is_separator=False, 
+            color_scheme='A', accent_scheme='A'):
+        """Place a card in the grid at the specified position."""
         row, col = requested_position
         rows, cols = size
-
-        # Expand grid if needed to accommodate the requested position
-        needed_rows = row + rows
-        needed_cols = col + cols
         
-        if needed_rows > self.grid_size[0] or needed_cols > self.grid_size[1]:
-            self.grid_size = (
-                max(self.grid_size[0], needed_rows),
-                max(self.grid_size[1], needed_cols)
-            )
-
-        # Check if position is available
-        if self._is_position_available(row, col, size):
-            return (row, col)
-
-        # If position is taken, find first available position
-        for r in range(self.grid_size[0]):
-            for c in range(self.grid_size[1]):
-                if self._is_position_available(r, c, size):
-                    return (r, c)
-
-        # If no position found, add to new row at the bottom
-        new_row = self.grid_size[0]
-        self.grid_size = (new_row + rows, max(self.grid_size[1], cols))
-        return (new_row, 0)
-
-    def _is_position_available(self, row, col, size):
-        """Check if a position is available for a card of given size."""
-        rows, cols = size
-        
-        # Check if any position in the range is occupied
-        return not any(
-            (r, c) in self.grid_positions
-            for r in range(row, row + rows)
-            for c in range(col, col + cols)
+        # Create and add the card
+        self._create_and_add_card(
+            row, col, size, widget_class, metric_str,
+            is_separator, color_scheme, accent_scheme
         )
 
-    def _create_and_add_card(self, row, col, size, widget_class, metric_str,
-                            is_separator=False, color_scheme='A', accent_scheme='A'):
+    def _create_and_add_card(
+            self, row, col, size, widget_class, metric_str, is_separator=False, 
+            color_scheme='A', accent_scheme='A'):
         """Create and add a card to the specified position."""
-        print(f"Creating {'separator' if is_separator else 'widget'} card with color scheme: {color_scheme}")  # Debug
-        
         if is_separator:
             card = SeparatorCard(self)
-            # Set size policy for separator to expand
-            card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         else:
             # Get base title before adding suffix
             base_metric = metric_str.replace('_usage', '').replace('_history', '')
@@ -421,11 +371,11 @@ class MainWindow(QMainWindow):
             
             # Create the card with the widget
             card = Card(widget=widget, color_scheme=color_scheme)
-            
-            # Set size policy for regular cards
-            card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
-        # Add remove button and connect it (for both regular cards and separators)
+        # Set size policy for all cards
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        
+        # Add remove button and connect it
         card.remove_btn.clicked.connect(lambda: self._remove_card(card))
         card.remove_btn.setVisible(self.edit_button.isChecked())
         
@@ -439,47 +389,8 @@ class MainWindow(QMainWindow):
         
         self.cards.append(card)
 
-    def _update_grid_layout(self):
-        """Update grid layout properties and refresh the display."""
-        # Update spacing based on grid size
-        base_spacing = 16
-        self.grid_layout.setSpacing(base_spacing)
-        
-        # Set uniform row and column stretches
-        for i in range(self.grid_size[0]):
-            self.grid_layout.setRowStretch(i, 1)
-        for i in range(self.grid_size[1]):
-            self.grid_layout.setColumnStretch(i, 1)
-        
-        # Remove any empty rows/columns
-        self._compact_grid()
-        
-        # Force layout update
-        self.grid_layout.update()
-    
-    def _compact_grid(self):
-        """Remove empty rows and columns from the grid."""
-        # Get all occupied positions
-        occupied_rows = set()
-        occupied_cols = set()
-        for pos in self.grid_positions.keys():
-            row, col = pos
-            occupied_rows.add(row)
-            occupied_cols.add(col)
-        
-        if not occupied_rows or not occupied_cols:
-            # If grid is empty, reset to 0x0
-            self.grid_size = (0, 0)
-            return
-        
-        # Update grid size to match actual content
-        self.grid_size = (
-            max(occupied_rows) + 1,
-            max(occupied_cols) + 1
-        )
-    
     def _remove_card(self, card):
-        """Remove a card from the grid."""
+        """Remove a card from the grid. Called when the remove button is clicked in edit mode."""
         # Find and remove all positions occupied by this card
         positions_to_remove = []
         for pos, c in self.grid_positions.items():
@@ -489,15 +400,13 @@ class MainWindow(QMainWindow):
         for pos in positions_to_remove:
             del self.grid_positions[pos]
         
-        # Remove from cards list
+        # Remove from cards list and layout
         self.cards.remove(card)
-        
-        # Remove from layout and delete
         self.grid_layout.removeWidget(card)
         card.deleteLater()
-        
-        # Update layout
-        self._update_grid_layout()
+
+    def _compactify_grid(self):
+        """Remove empty rows and columns from the grid. Called after a card is removed."""
 
     def _load_layout(self):
         """Load and apply the default layout."""
@@ -510,19 +419,35 @@ class MainWindow(QMainWindow):
             self._update_theme()
             self.theme_button.setChecked(parser.theme_str == 'dark')
             
+            # Set grid size from parser
+            self.grid_size = (parser.n_rows, parser.n_cols)
+            
             # Create widgets from parsed config
             for widget_config in parser.widgets:
-                # Get widget class based on type
-                widget_class = self._get_widget_info(widget_config.widget_type)
+                print(f"Processing widget: {widget_config}")  # Debug
                 
-                # Skip if invalid widget type
-                if widget_config.widget_type != "separator" and not widget_class:
+                # Handle separator differently
+                if widget_config.is_separator:
+                    print(f"Creating separator at position ({widget_config.fromRow}, {widget_config.fromCol})")  # Debug
+                    self._place_card(
+                        size=(widget_config.rowSpan, widget_config.colSpan),
+                        requested_position=(widget_config.fromRow, widget_config.fromCol),
+                        widget_class=None,
+                        metric_str=None,
+                        is_separator=True,
+                        color_scheme=widget_config.color_scheme
+                    )
+                    continue
+                
+                # Get widget class for non-separator widgets
+                widget_class = self._get_widget_info(widget_config.widget_type)
+                if not widget_class:
+                    print(f"Invalid widget type: {widget_config.widget_type}")  # Debug
                     continue
                 
                 # Create metric string with appropriate suffix
-                metric_str = widget_config.metric
-                if not widget_config.is_separator:
-                    metric_str += self._get_metric_suffix(widget_config.widget_type)
+                metric_str = widget_config.metric + self._get_metric_suffix(widget_config.widget_type)
+                print(f"Creating widget with metric: {metric_str}")  # Debug
                 
                 # Place the card
                 self._place_card(
@@ -530,7 +455,7 @@ class MainWindow(QMainWindow):
                     requested_position=(widget_config.fromRow, widget_config.fromCol),
                     widget_class=widget_class,
                     metric_str=metric_str,
-                    is_separator=widget_config.is_separator,
+                    is_separator=False,
                     color_scheme=widget_config.color_scheme
                 )
         
