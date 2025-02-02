@@ -58,7 +58,11 @@ class LayoutParser:
         for row_str in self.row_strings:
             n_cols_in_row = 0
             for substring in row_str.split('x')[1:]:
-                n_cols_in_row += int(substring[0])
+                # Catch errors where the 'x' is not adjacent to numbers (e.g. for text widgets).
+                try:
+                    n_cols_in_row += int(substring[0])
+                except:
+                    continue
             self.n_cols = max(self.n_cols, n_cols_in_row)
         
     def parse_widgets(self):
@@ -81,8 +85,8 @@ class LayoutParser:
                     metric='separator' if 'separator' in widget_str else widget_str.split(' ')[1],
                     fromRow=r,
                     fromCol=from_col,
-                    rowSpan=int(widget_str.split('x')[0][-1]),
-                    colSpan=int(widget_str.split('x')[1][0]),
+                    rowSpan=int(widget_str.split('x')[-2][-1]), # first char before last 'x'
+                    colSpan=int(widget_str.split('x')[-1][-0]), # first char after last 'x'
                     color_scheme=color,
                     is_separator=True if 'separator' in widget_str else False
                 )

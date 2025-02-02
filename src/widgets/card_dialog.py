@@ -12,6 +12,35 @@ class AddCardDialog(QDialog):
         """Initialize the dialog UI"""
         layout = QVBoxLayout()
         
+        # Widget type selection
+        type_layout = QHBoxLayout()
+        type_layout.addWidget(QLabel("Widget Type:"))
+        self.type_combo = QComboBox()
+        self.type_combo.addItems([
+            "Circle Widget",
+            "Graph Widget",
+            "Text Widget",
+            "Separator"
+        ])
+        type_layout.addWidget(self.type_combo)
+        layout.addLayout(type_layout)
+        
+        # Metric selection
+        metric_layout = QHBoxLayout()
+        metric_layout.addWidget(QLabel("Metric:"))
+        self.metric_combo = QComboBox()
+        self.metric_combo.addItems([
+            "Memory Usage",     # memory
+            "CPU Usage",        # cpu
+            "GPU Usage",        # gpu_usage
+            "GPU Temperature",  # gpu_temp
+            "GPU Memory",       # gpu_memory
+            "Fan Speed",        # fan_speed
+            "Ping"              # ping
+        ])
+        metric_layout.addWidget(self.metric_combo)
+        layout.addLayout(metric_layout)
+        
         # Size group
         size_group = QGroupBox("Size")
         size_layout = QHBoxLayout()
@@ -61,35 +90,6 @@ class AddCardDialog(QDialog):
         
         pos_group.setLayout(pos_layout)
         layout.addWidget(pos_group)
-        
-        # Widget type selection
-        type_layout = QHBoxLayout()
-        type_layout.addWidget(QLabel("Widget Type:"))
-        self.type_combo = QComboBox()
-        self.type_combo.addItems([
-            "Circle Widget",
-            "Graph Widget",
-            "Text Widget",
-            "Separator"
-        ])
-        type_layout.addWidget(self.type_combo)
-        layout.addLayout(type_layout)
-        
-        # Metric selection
-        metric_layout = QHBoxLayout()
-        metric_layout.addWidget(QLabel("Metric:"))
-        self.metric_combo = QComboBox()
-        self.metric_combo.addItems([
-            "Memory Usage",     # memory
-            "CPU Usage",        # cpu
-            "GPU Usage",        # gpu_usage
-            "GPU Temperature",  # gpu_temp
-            "GPU Memory",       # gpu_memory
-            "Fan Speed",        # fan_speed
-            "Ping"              # ping
-        ])
-        metric_layout.addWidget(self.metric_combo)
-        layout.addLayout(metric_layout)
         
         # Add style selections group
         style_group = QGroupBox("Style")

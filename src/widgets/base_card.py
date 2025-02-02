@@ -47,7 +47,7 @@ class Card(QFrame):
     def __init__(self, widget=None, color_scheme='A'):
         super().__init__()
         self.setObjectName("card")
-        print(f"Creating card with color scheme: {color_scheme}")  # Debug
+        # print(f"Creating card with color scheme: {color_scheme}")  # Debug
         self.color_scheme = color_scheme
         
         # Create layout

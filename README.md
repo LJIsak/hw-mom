@@ -12,8 +12,8 @@ An ultra-lightweight hardware monitoring application for Windows that displays s
 Just install bro.
 
 ## Limitations
-- GPU metrics currently only supported on NVIDIA GPUs.
-- CPU temperature and fan speed currenyly not supported on Windows.
+- GPU metrics currently only supports NVIDIA GPUs.
+- CPU temperature and fan speed currently not supported on Windows.
 
 # How to create a layout
 
@@ -34,13 +34,13 @@ In it, widgets are created with the following syntax:
 
 Layouts are created by placing widgets next to each other, separated by `[]` brackets. Use new lines to indicate the end of a row and empty brackets (`[ ]`) to reserve space in case a widget spans more than one row. See examples below.
 
-The default theme can be specified by adding either `theme: dark` or `theme: light` to the beginning of the text file.
+The default color theme can be specified by adding either `theme: dark` or `theme: light` to the beginning of the text file.
 
 **Example 1:**
 ```
 theme: dark
-[circle gpu 2x2 color a][text ping 1x1][separator 2x1][circle gpu_temp 2x2 color b]
-[                      ][text ping 1x1][             ][                           ]
+[circle gpu 2x2 color a][separator 2x1][text ping 1x1][circle gpu_temp 2x2 color b]
+[                      ][             ][text ping 1x1][                           ]
 [graph cpu 2x6 color b]
 [                     ]
 [separator 1x6]
@@ -55,7 +55,9 @@ This will create a layout with 5 rows (since there are 5 rows of text) and 6 col
 ```
 This will create a layout with 3 rows (since there are 3 rows of text) and 5 columns (since the maximum sum of widths over all rows is 5).
 
-> Tip: because of dynamic resizing, there is no difference between two 1x1 widgets next to one another and two 2x2 widgets next to one another.
+> *Tip: because of dynamic resizing, only relative sizes matter. There is no difference between a lone 1x1 widget and a lone 2x2 widget.*
 
 # Themes
 The available themes can be modified by editing the `settings/themes.json` file. See `settings/sample_themes.json` for examples.
+
+> *Tip: you can also modify the icon by renaming it to `icon.png` in the `assets` folder.*

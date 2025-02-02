@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QGridLayout, QSizePolicy, QPushButton, QVBoxLayout)
 from PyQt6.QtCore import Qt, QPoint, QTimer
-from PyQt6.QtGui import QPalette, QColor
+from PyQt6.QtGui import QPalette, QColor, QIcon
 from widgets.base_card import Card
 from widgets.card_dialog import AddCardDialog
 from widgets.circle_widget import CircleWidget
@@ -12,6 +12,7 @@ from theme_manager import theme
 from collectors.system_metrics import SystemMetrics
 from layout_parser import LayoutParser
 from pathlib import Path
+
 
 class AddCardButton(QPushButton):
     def __init__(self, parent=None):
@@ -136,6 +137,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("HW-Mom")
         self.setMinimumSize(256, 128)
         self.resize(640, 480)  # Set default starting size
+        self.setWindowIcon(QIcon(str(Path(__file__).parent / "assets" / "icon.png")))
         
         # Create the global SystemMetrics instance
         self.system_metrics = SystemMetrics()
@@ -181,11 +183,11 @@ class MainWindow(QMainWindow):
         # Create main vertical layout
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(16, 16, 16, 16)
-        
+
         # Create grid layout for cards
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(16)
-        
+
         # Add layouts to main layout
         main_layout.addLayout(self.grid_layout)
         self.main_widget.setLayout(main_layout)
@@ -324,9 +326,6 @@ class MainWindow(QMainWindow):
             metric_suffix = self._get_metric_suffix(values['widget_type'])
             final_metric = base_metric + metric_suffix
 
-            # Debug print to verify metric string
-            print(f"Creating widget with metric string: {final_metric}")
-
             self._place_card(
                 size=values['size'],
                 requested_position=values['position'],
@@ -342,7 +341,6 @@ class MainWindow(QMainWindow):
             color_scheme='A', accent_scheme='A'):
         """Place a card in the grid at the specified position."""
         row, col = requested_position
-        rows, cols = size
         
         # Create and add the card
         self._create_and_add_card(
@@ -388,6 +386,8 @@ class MainWindow(QMainWindow):
                 self.grid_positions[(r, c)] = card
         
         self.cards.append(card)
+        print(f"Added {'separator' if is_separator else widget_class.__name__} card at " 
+              f"position ({row}, {col}) with size {size}") # Debug
 
     def _remove_card(self, card):
         """Remove a card from the grid. Called when the remove button is clicked in edit mode."""
@@ -421,21 +421,25 @@ class MainWindow(QMainWindow):
             
             # Set grid size from parser
             self.grid_size = (parser.n_rows, parser.n_cols)
+            print(f"Grid size: {self.grid_size}") # Debug
+            
+            # Set uniform stretch factors for grid
+            for col in range(self.grid_size[1]):
+                self.grid_layout.setColumnStretch(col, 1)
+            for row in range(self.grid_size[0]):
+                self.grid_layout.setRowStretch(row, 1)
             
             # Create widgets from parsed config
             for widget_config in parser.widgets:
-                print(f"Processing widget: {widget_config}")  # Debug
-                
                 # Handle separator differently
                 if widget_config.is_separator:
-                    print(f"Creating separator at position ({widget_config.fromRow}, {widget_config.fromCol})")  # Debug
                     self._place_card(
                         size=(widget_config.rowSpan, widget_config.colSpan),
                         requested_position=(widget_config.fromRow, widget_config.fromCol),
                         widget_class=None,
                         metric_str=None,
                         is_separator=True,
-                        color_scheme=widget_config.color_scheme
+                        color_scheme=widget_config.color_scheme.upper()  # Convert to uppercase
                     )
                     continue
                 
@@ -447,7 +451,6 @@ class MainWindow(QMainWindow):
                 
                 # Create metric string with appropriate suffix
                 metric_str = widget_config.metric + self._get_metric_suffix(widget_config.widget_type)
-                print(f"Creating widget with metric: {metric_str}")  # Debug
                 
                 # Place the card
                 self._place_card(
@@ -456,7 +459,7 @@ class MainWindow(QMainWindow):
                     widget_class=widget_class,
                     metric_str=metric_str,
                     is_separator=False,
-                    color_scheme=widget_config.color_scheme
+                    color_scheme=widget_config.color_scheme.upper()  # Convert to uppercase
                 )
         
         except Exception as e:

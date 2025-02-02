@@ -1,3 +1,4 @@
 theme: light
-[circle cpu 1x1 color a][circle gpu_temp 1x1 color b][circle gpu_memory 2x1 color c]
-[         separator 1x2                             ][                             ]
+[circle memory 2x2 color a][text ping 1x1][circle memory 2x1 color a]
+[                         ][separator 1x1][                         ]
+[separator 1x3]
