@@ -228,10 +228,25 @@ class MainWindow(QMainWindow):
         self.theme_button.move(32, bottom_y + self.theme_button.height()//2)
     
     def resizeEvent(self, event):
-        """Handle window resize to reposition floating buttons"""
+        """Handle window resize to reposition floating buttons and enforce equal grid cell sizes."""
         super().resizeEvent(event)
         if hasattr(self, 'add_button'):
             self._position_floating_buttons()
+
+        # Enforce uniform grid cell sizes based on the current main widget size.
+        margins = self.main_widget.layout().contentsMargins()
+        spacing = self.grid_layout.spacing()
+        available_height = (self.main_widget.height() - margins.top() - margins.bottom() 
+                            - spacing * (self.grid_size[0] - 1))
+        available_width = (self.main_widget.width() - margins.left() - margins.right() 
+                           - spacing * (self.grid_size[1] - 1))
+        cell_height = available_height / self.grid_size[0]
+        cell_width = available_width / self.grid_size[1]
+
+        for row in range(self.grid_size[0]):
+            self.grid_layout.setRowMinimumHeight(row, int(cell_height))
+        for col in range(self.grid_size[1]):
+            self.grid_layout.setColumnMinimumWidth(col, int(cell_width))
     
     def _toggle_edit_mode(self):
         """Toggle visibility of remove buttons on all cards"""
@@ -281,9 +296,9 @@ class MainWindow(QMainWindow):
         """Get the appropriate metric suffix based on widget type."""
         if widget_type == "graph":
             return "_history"
-        elif widget_type == "circle" or widget_type == "text":
+        elif widget_type == "circle":
             return "_usage"
-        return ""
+        return ""  # Text widgets don't need a suffix
     
     def _format_title(self, metric_str: str) -> str:
         """Format metric string into a proper title."""

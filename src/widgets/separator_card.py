@@ -27,6 +27,10 @@ class SeparatorCard(QFrame):
         self.remove_btn = RemoveButton(self)
         self.remove_btn.hide()
     
+    def _update_style(self):
+        # No style update is necessary for the separator.
+        pass
+
     def resizeEvent(self, event):
         """Handle resize to position remove button"""
         super().resizeEvent(event)
