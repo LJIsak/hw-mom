@@ -44,6 +44,10 @@ class ThemeManager:
             self._current_theme = self._themes[theme_name]
         else:
             print(f"Theme '{theme_name}' not found")
+    
+    def get_font_size(self) -> int:
+        """Return the base font size from the current theme (defaulting to 32 if not specified)."""
+        return self._current_theme.get("font_size", 32)
 
 # Global theme manager instance
 theme = ThemeManager() 

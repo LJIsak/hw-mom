@@ -36,7 +36,7 @@ class CircularProgressLabel(QWidget):
         self.value_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme.get_color("text_big").name()};
-                font-size: 32px;
+                font-size: {theme.get_font_size()}px;
                 font-weight: 500;
             }}
         """)
@@ -151,10 +151,8 @@ class CircleWidget(BaseWidget):
         history = self.system_metrics.get_metric_from_string(history_metric)
         
         # Calculate a single 'current' value based on the size of history:
-        if isinstance(history, (int, float)):
-            current = history
-        elif len(history) >= 8:
-            current = sum(history[-8:]) / 8
+        if len(history) >= 4:
+            current = sum(history[-4:]) / 4
         else:
             current = history[-1] if history else 0
         

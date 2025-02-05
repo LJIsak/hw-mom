@@ -19,8 +19,8 @@ class SystemMetrics:
         self.collect_ping_enabled = False
         self.collect_fan_enabled = False
 
-        self.update_interval = 500  # milliseconds
-        self.history_size = int(60 / (self.update_interval / 1000))  # 60 seconds of history
+        self.update_interval = 1000  # milliseconds
+        self.history_size = int(60 / (self.update_interval / 1000)) # 60 seconds of history
         
         # Initialize histories with default values
         self.cpu_history = [0]
@@ -36,8 +36,8 @@ class SystemMetrics:
         self.max_cpu_usage = 100 # CPU usage is always percentage based
         self.max_gpu_usage = 100 # GPU usage is always percentage based
         self.max_gpu_memory = None
-        self.max_gpu_temp = 100 # Always 100 celcius as max
-        self.max_ping = 999 # always 999 ms as max
+        self.max_gpu_temp = 100
+        self.max_ping = 1000
         self.max_fan_speed = 5000  # Most PC fans max out around 3000-5000 RPM
 
         # Initialize max values and collect initial metrics

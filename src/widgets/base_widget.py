@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from typing import Optional
+from theme_manager import theme
 
 class BaseWidget(QWidget):
     """

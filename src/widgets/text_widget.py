@@ -23,7 +23,7 @@ class TextValueLabel(QLabel):
         self.setStyleSheet(f"""
             QLabel {{
                 color: {theme.get_color("text_big").name()};
-                font-size: 48px;
+                font-size: {int(theme.get_font_size() * 1.2)}px;
                 font-weight: 500;
                 padding: 8px;
             }}
@@ -85,10 +85,21 @@ class TextWidget(BaseWidget):
         self.update_display()
 
     def update_display(self):
-        """Update the displayed text value."""
-        current = self.get_current_value()
-        
-        # Format the display value based on the metric type
+        """Update the displayed text value by averaging the 4 most recent values."""
+        # Ensure we always get the history data if the string does not already contain '_history'.
+        if '_history' not in self.metric_str:
+            history_metric = self.metric_str + '_history'
+        else:
+            history_metric = self.metric_str
+        history = self.system_metrics.get_metric_from_string(history_metric)
+
+        # Calculate a single 'current' value based on the size of history:
+        if len(history) >= 4:
+            current = sum(history[-4:]) / 4
+        else:
+            current = history[-1] if history else 0
+
+        # Format the display value based on the metric type.
         if 'memory' in self.metric_str:
             display_text = f"{current:.1f}GB"
         elif any(x in self.metric_str for x in ['cpu', 'gpu']):
