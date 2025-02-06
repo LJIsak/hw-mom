@@ -1,12 +1,12 @@
 # HWMom
 
-An ultra-lightweight hardware monitoring application for Windows that displays system performance metrics through an elegant dashboard with live-updating widgets. Designed to not look like ass.
+An ultra-lightweight hardware monitoring application that displays system performance metrics through an elegant dashboard with live-updating widgets. Designed to not look like ass.
 
 ## Features
 - Real-time monitoring of system metrics (CPU, RAM, etc.)
 - Customizable and sleek dashboard with various widget types
 - Modern, minimal dark/light theme interface
-- Low resource footprint
+- Very low resource footprint
 
 ## Installation
 Just install bro.
