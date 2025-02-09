@@ -1,3 +1,4 @@
+import re
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
@@ -44,8 +45,14 @@ class LayoutParser:
 
         # Calculate grid dimensions
         self.n_rows = len(self.row_strings)
+
+        # Alternative way to get n_rows (used to simplify laout string creation in some cases)
+        numbers_before_x = re.findall(r'(\d+)x', self.layout_str)
+        numbers_before_x = [int(num) for num in numbers_before_x]
+        self.n_rows = max(self.n_rows, max(numbers_before_x))
         
         # Find maximum columns by summing widget widths in each row
+        # Currently actually only works for single integers (max 9)
         self.n_cols = 1
         for row_str in self.row_strings:
             n_cols_in_row = 0
@@ -74,10 +81,8 @@ class LayoutParser:
                 # If widget string is empty, it indicates occupancy from above. If so, 
                 # increament the column tracker until an empty space is found or row ends.
                 if widget_str == '':
-                    while self.occupancy_matrix[row_idx][current_col]:
+                    while current_col<self.n_cols and self.occupancy_matrix[row_idx][current_col]:
                         current_col += 1
-                        if current_col == self.n_cols:
-                            break
                     continue
 
                 color = 'A' if 'color' not in widget_str else widget_str.split('color')[-1][-1]

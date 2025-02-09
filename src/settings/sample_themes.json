@@ -1,5 +1,6 @@
 {
     "windows": {
+        "font_size": 32,
         "background": "#202020",
         "card_background": "#191919", 
         "card_background_2": "#191919",
@@ -13,6 +14,7 @@
         "edit_mode_button": "#380b23"
     },
     "earth": {
+        "font_size": 32,
         "background": "#f2e4d4",
         "card_background": "#fefefe", 
         "card_background_2": "#f8f4f0",
@@ -25,20 +27,8 @@
         "add_button": "#a5c588",
         "edit_mode_button": "#f0bb8b"
     },
-    "midnight": {
-        "background": "#1e1e2f",
-        "card_background": "#27293d", 
-        "card_background_2": "#27293d",
-        "text_big": "#dadade",
-        "text_small": "#a7a7aa",
-        "chart": "#72d69b",
-        "chart_2": "#cb3cff",
-        "chart_3": "#f5628e",
-        "chart_legend": "#66666e",
-        "add_button": "#1a3324",
-        "edit_mode_button": "#3b114a"
-    },
     "crypto": {
+        "font_size": 32,
         "background": "#0b0e11",
         "card_background": "#181a20", 
         "card_background_2": "#181a20",
@@ -50,6 +40,20 @@
         "chart_legend": "#707070",
         "add_button": "#633a0c",
         "edit_mode_button": "#380b23"
+    },
+    "midnight": {
+        "font_size": 32,
+        "background": "#1e1e2f",
+        "card_background": "#27293d", 
+        "card_background_2": "#27293d",
+        "text_big": "#dadade",
+        "text_small": "#a7a7aa",
+        "chart": "#72d69b",
+        "chart_2": "#cb3cff",
+        "chart_3": "#f5628e",
+        "chart_legend": "#66666e",
+        "add_button": "#1a3324",
+        "edit_mode_button": "#3b114a"
     }
 }
 

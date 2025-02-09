@@ -140,7 +140,7 @@ class GraphWidget(BaseWidget):
 
     def update_display(self):
         """Update the graph with latest history values."""
-        history = self.get_current_value()
+        history = self.get_history()
         max_val = self.get_max_value()
         
         # Convert values to percentages relative to max value

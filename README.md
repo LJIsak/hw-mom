@@ -2,6 +2,13 @@
 
 An ultra-lightweight hardware monitoring application that displays system performance metrics through an elegant dashboard with live-updating widgets. Designed to not look like ass.
 
+**Screenshots:**
+
+| ![Windows theme](src/screenshots/theme_windows_layout_1.jpg) | ![Crypto theme](src/screenshots/theme_crypto_layout_2.jpg) |
+|---|---|
+| ![Earth theme](src/screenshots/theme_earth_layout_3.jpg)   | ![Midnight theme](src/screenshots/theme_midnight_layout_4.jpg) |
+
+
 ## Features
 - Real-time monitoring of system metrics (CPU, RAM, etc.)
 - Customizable and sleek dashboard with various widget types
@@ -36,26 +43,47 @@ Layouts are created by placing widgets next to each other, separated by `[]` bra
 
 The default color theme can be specified by adding either `theme: dark` or `theme: light` to the beginning of the text file.
 
+> *Tip: because of dynamic resizing, only relative sizes matter. There is no difference between a lone 1x1 widget and a lone 2x2 widget.*
+
 **Example 1:**
 ```
 theme: dark
-[circle gpu 2x2 color a][separator 2x1][text ping 1x1][circle gpu_temp 2x2 color b]
-[                      ][             ][text ping 1x1][                           ]
-[graph cpu 2x6 color b]
-[                     ]
-[separator 1x6]
+[separator 1x8][text ping 1x2]
+[separator 1x1][graph cpu 1x4][circle cpu 1x2][separator 1x1][text memory 1x2][separator 1x1]
+[separator 1x1][graph gpu_temp 1x4 color b][circle gpu 1x2 color b][separator 1x1][text gpu_memory 1x2][separator 1x1]
+[separator 1x8][text cpu 1x2]
 ```
-This will create a layout with 5 rows (since there are 5 rows of text) and 6 columns (since the maximum sum of widths over all rows is 6).
+This will create a layout with 5 rows (since there are 5 rows in the text file) and 10 columns (since the maximum sum of widths over all rows is 6).
 
 **Example 2:**
 ```
-[text ping 3x1][          graph gpu_temp 1x4         ]
-[             ][circle gpu 1x2][circle gpu_memory 1x2]
-[             ][           separator 1x4             ]
+[separator 4x1][graph cpu 1x3][text ping 1x1][separator 4x1]
+[][graph gpu 1x3 color b][text memory 1x1][]
+[][graph gpu_temp 1x3 color c][text gpu_temp 1x1][]
+[][graph gpu_memory 1x3 color a][text gpu_memory 1x1]
 ```
-This will create a layout with 3 rows (since there are 3 rows of text) and 5 columns (since the maximum sum of widths over all rows is 5).
 
-> *Tip: because of dynamic resizing, only relative sizes matter. There is no difference between a lone 1x1 widget and a lone 2x2 widget.*
+**Example 3:**
+```
+theme: light
+[separator 1x5][separator 1x5]
+[separator 1x1][circle memory 4x4][circle ping 4x4 color b]
+[separator 1x1][][]
+[separator 1x1][][]
+[separator 1x1][][]
+[separator 1x1][graph gpu 2x4 color c][text cpu 2x2][text gpu_temp 2x2]
+[separator 1x1][][][][]
+[separator 1x5][separator 1x5]
+```
+
+**Example 4:**
+```
+theme: dark
+[circle cpu 1x1 color b][circle gpu 1x1 color a][text ping 1x1][text ping 1x1]
+[circle memory 1x1 color b][circle gpu_memory 1x1 color a][text gpu_memory 1x1][text gpu_memory 1x1]
+[graph memory 1x2 color c][graph ping 1x2 color c]
+```
+
 
 # Themes
 The available themes can be modified by editing the `settings/themes.json` file. See `settings/sample_themes.json` for examples.

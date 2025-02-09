@@ -65,20 +65,19 @@ class BaseWidget(QWidget):
             return self.system_metrics.max_ping
         return 100.0  # Default max value
 
-    def get_current_value(self):
-        """Gets the current value for this widget's metric."""
-        value = self.system_metrics.get_metric_from_string(self.metric_str)
-        
-        # For graph widgets that need history data, ensure we return a list
-        if '_history' in self.metric_str:
-            if isinstance(value, (int, float)):
-                return [value]  # Convert single value to list
-            return value
-        
-        # For non-history metrics (circle/text widgets), return single value
-        if isinstance(value, list):
-            return value[-1] if value else 0
-        return value 
+    def get_history(self):
+        """Gets the full history for this widget's metric."""
+        return self.system_metrics.get_metric_from_string(self.metric_str)
+
+    def get_average_value(self):
+        """
+        Gets the average of the last 4 values from the history. 
+        Used for the circle and text widgets.
+        """
+        history = self.get_history()
+        if len(history) >= 4:
+            return sum(history[-4:]) / 4
+        return history[-1] if history else 0
 
     def set_color_scheme(self, scheme: str):
         """Set the color scheme for this widget."""

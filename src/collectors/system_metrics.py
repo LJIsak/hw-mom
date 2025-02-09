@@ -36,9 +36,9 @@ class SystemMetrics:
         self.max_cpu_usage = 100 # CPU usage is always percentage based
         self.max_gpu_usage = 100 # GPU usage is always percentage based
         self.max_gpu_memory = None
-        self.max_gpu_temp = 100
-        self.max_ping = 1000
-        self.max_fan_speed = 5000  # Most PC fans max out around 3000-5000 RPM
+        self.max_gpu_temp = 100 # Arbitrary max value
+        self.max_ping = 500 # Arbitrary max value
+        self.max_fan_speed = 6000 # Arbitrary max value
 
         # Initialize max values and collect initial metrics
         self.update_max_values()
@@ -58,63 +58,35 @@ class SystemMetrics:
             self.collect_fan_metrics()
 
     def get_metric_from_string(self, string: str):
-        """Returns a metric based on a string."""
+        """Returns a metric history based on a string."""
         if not string:
-            return 0
+            return [0]
         
         # CPU
-        if string == "cpu_usage":
-            self.collect_cpu_enabled = True
-            return self.cpu_history[-1] if self.cpu_history else 0
-        elif string == "cpu_history":
-            self.collect_cpu_enabled = True
+        if string == "cpu":
             return self.cpu_history
         
         # Memory
-        elif string == "memory_usage":
-            self.collect_memory_enabled = True
-            return self.system_memory_history[-1] if self.system_memory_history else 0
-        elif string == "memory_history":
-            self.collect_memory_enabled = True
+        elif string in ["memory", "ram"]:
             return self.system_memory_history
         
         # GPU
-        elif string == "gpu_temp":
-            self.collect_gpu_enabled = True
-            return self.gpu_temp_history[-1] if self.gpu_temp_history else 0
-        elif string == "gpu_temp_history":
-            self.collect_gpu_enabled = True
-            return self.gpu_temp_history
-        elif string == "gpu_usage":
-            self.collect_gpu_enabled = True
-            return self.gpu_history[-1] if self.gpu_history else 0
-        elif string == "gpu_usage_history":
-            self.collect_gpu_enabled = True
+        elif string == "gpu":
             return self.gpu_history
         elif string == "gpu_memory":
-            self.collect_gpu_enabled = True
-            return self.gpu_memory_history[-1] if self.gpu_memory_history else 0
-        elif string == "gpu_memory_history":
-            self.collect_gpu_enabled = True
             return self.gpu_memory_history
+        elif string == "gpu_temp":
+            return self.gpu_temp_history
         
         # Ping
         elif string == "ping":
-            self.collect_ping_enabled = True
-            return self.ping_history[-1] if self.ping_history else 0
-        elif string == "ping_history":
-            self.collect_ping_enabled = True
             return self.ping_history
         
         # Fan speed
         elif string == "fan_speed":
-            self.collect_fan_enabled = True
-            return self.fan_history[-1] if self.fan_history else 0
-        elif string == "fan_speed_history":
-            self.collect_fan_enabled = True
             return self.fan_history
-            
-        return 0
+        
+        return [0]
 
     def update_max_values(self):
         """Updates the max values for each metric."""

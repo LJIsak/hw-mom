@@ -146,16 +146,7 @@ class CircleWidget(BaseWidget):
     
     def update_display(self):
         """Update the displayed value and progress."""
-        # Get history data by replacing '_usage' with '_history' in get_metric_from_string():
-        history_metric = self.metric_str.replace('_usage', '_history')
-        history = self.system_metrics.get_metric_from_string(history_metric)
-        
-        # Calculate a single 'current' value based on the size of history:
-        if len(history) >= 4:
-            current = sum(history[-4:]) / 4
-        else:
-            current = history[-1] if history else 0
-        
+        current = self.get_average_value()
         max_val = self.get_max_value()
         
         # Calculate relative value (0-1)

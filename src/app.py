@@ -131,11 +131,11 @@ class ThemeButton(QPushButton):
             }}
         """)
 
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow):  
     def __init__(self):
         super().__init__()
         self.setWindowTitle("HW-Mom")
-        self.setMinimumSize(256, 128)
+        self.setMinimumSize(128, 64)
         self.resize(640, 480)  # Set default starting size
         self.setWindowIcon(QIcon(str(Path(__file__).parent / "assets" / "icon.png")))
         
@@ -214,21 +214,29 @@ class MainWindow(QMainWindow):
     def _position_floating_buttons(self):
         """Position the floating buttons"""
         # Get common bottom position for all buttons
-        bottom_margin = 32
-        bottom_y = self.height() - bottom_margin - self.add_button.height()
+        margin_x = 24
+        margin_y = self.height() - 24
+        margin_x_right = self.width() - margin_x
         
         # Position add button (bottom right)
-        add_button_x = self.width() - self.add_button.width() - 32
-        self.add_button.move(add_button_x, bottom_y)
+        self.add_button.move(
+            margin_x_right - self.add_button.width(), 
+            margin_y - self.add_button.height())
         
         # Position edit button to the left of add button
-        self.edit_button.move(add_button_x - self.edit_button.width() - 16, bottom_y)
+        self.edit_button.move(
+            self.add_button.x() - self.edit_button.width() - 12, 
+            margin_y - self.edit_button.height())
         
         # Position theme button (bottom left)
-        self.theme_button.move(32, bottom_y + self.theme_button.height()//2)
+        self.theme_button.move(
+            margin_x + self.theme_button.width() - 16, 
+            margin_y - self.theme_button.height())
     
     def resizeEvent(self, event):
-        """Handle window resize to reposition floating buttons and enforce equal grid cell sizes."""
+        """
+        Handle window resize to reposition floating buttons and enforce equal grid cell sizes.
+        """
         super().resizeEvent(event)
         if hasattr(self, 'add_button'):
             self._position_floating_buttons()
@@ -291,14 +299,6 @@ class MainWindow(QMainWindow):
             "separator": None
         }
         return widget_types.get(widget_type)
-
-    def _get_metric_suffix(self, widget_type: str) -> str:
-        """Get the appropriate metric suffix based on widget type."""
-        if widget_type == "graph":
-            return "_history"
-        elif widget_type == "circle":
-            return "_usage"
-        return ""  # Text widgets don't need a suffix
     
     def _format_title(self, metric_str: str) -> str:
         """Format metric string into a proper title."""
@@ -336,16 +336,14 @@ class MainWindow(QMainWindow):
                 )
                 return
 
-            # Get base metric string and add appropriate suffix
-            base_metric = values['metric_str']
-            metric_suffix = self._get_metric_suffix(values['widget_type'])
-            final_metric = base_metric + metric_suffix
+            # Use metric string directly without suffix
+            metric_str = values['metric_str']
 
             self._place_card(
                 size=values['size'],
                 requested_position=values['position'],
                 widget_class=widget_class,
-                metric_str=final_metric,
+                metric_str=metric_str,
                 is_separator=False,
                 color_scheme=values['color_scheme'],
                 accent_scheme=values['accent_scheme']
@@ -454,7 +452,7 @@ class MainWindow(QMainWindow):
                         widget_class=None,
                         metric_str=None,
                         is_separator=True,
-                        color_scheme=widget_config.color_scheme.upper()  # Convert to uppercase
+                        color_scheme=widget_config.color_scheme.upper()
                     )
                     continue
                 
@@ -464,8 +462,8 @@ class MainWindow(QMainWindow):
                     print(f"Invalid widget type: {widget_config.widget_type}")  # Debug
                     continue
                 
-                # Create metric string with appropriate suffix
-                metric_str = widget_config.metric + self._get_metric_suffix(widget_config.widget_type)
+                # Use metric string directly without suffix
+                metric_str = widget_config.metric
                 
                 # Place the card
                 self._place_card(
@@ -474,7 +472,7 @@ class MainWindow(QMainWindow):
                     widget_class=widget_class,
                     metric_str=metric_str,
                     is_separator=False,
-                    color_scheme=widget_config.color_scheme.upper()  # Convert to uppercase
+                    color_scheme=widget_config.color_scheme.upper()
                 )
         
         except Exception as e:
@@ -484,6 +482,6 @@ class MainWindow(QMainWindow):
                 size=(1, 1),
                 requested_position=(0, 0),
                 widget_class=self._get_widget_info("circle"),
-                metric_str="cpu_usage",
+                metric_str="cpu",
                 color_scheme='A'
             )

@@ -86,28 +86,17 @@ class TextWidget(BaseWidget):
 
     def update_display(self):
         """Update the displayed text value by averaging the 4 most recent values."""
-        # Ensure we always get the history data if the string does not already contain '_history'.
-        if '_history' not in self.metric_str:
-            history_metric = self.metric_str + '_history'
-        else:
-            history_metric = self.metric_str
-        history = self.system_metrics.get_metric_from_string(history_metric)
-
-        # Calculate a single 'current' value based on the size of history:
-        if len(history) >= 4:
-            current = sum(history[-4:]) / 4
-        else:
-            current = history[-1] if history else 0
+        current = self.get_average_value()
 
         # Format the display value based on the metric type.
         if 'memory' in self.metric_str:
             display_text = f"{current:.1f}GB"
+        elif 'temp' in self.metric_str:  # Check for temp before the general gpu check
+            display_text = f"{current:.0f}°C"
         elif any(x in self.metric_str for x in ['cpu', 'gpu']):
             display_text = f"{current:.0f}%"
         elif 'ping' in self.metric_str:
             display_text = f"{current:.0f}ms"
-        elif 'temp' in self.metric_str:
-            display_text = f"{current:.0f}°C"
         else:
             display_text = f"{current:.1f}"
             

@@ -1,5 +1,9 @@
 theme: light
-[separator 1x8][text ping 1x2]
-[separator 1x1][graph cpu 1x4][circle cpu 1x2][separator 1x1][text memory 1x2][separator 1x1]
-[separator 1x1][graph gpu 1x4 color b][circle gpu 1x2 color b][separator 1x1][text gpu_memory 1x2][separator 1x1]
-[separator 1x8][text cpu 1x2]
+[separator 1x5][separator 1x5]
+[separator 1x1][circle memory 4x4][circle ping 4x4 color b]
+[separator 1x1][][]
+[separator 1x1][][]
+[separator 1x1][][]
+[separator 1x1][graph gpu 2x4 color c][text cpu 2x2][text gpu_temp 2x2]
+[separator 1x1][][][][]
+[separator 1x5][separator 1x5]
