@@ -399,8 +399,8 @@ class MainWindow(QMainWindow):
                 self.grid_positions[(r, c)] = card
         
         self.cards.append(card)
-        print(f"Added {'separator' if is_separator else widget_class.__name__} card at " 
-              f"position ({row}, {col}) with size {size}") # Debug
+        # print(f"Added {'separator' if is_separator else widget_class.__name__} card at " 
+        #       f"position ({row}, {col}) with size {size}") # Debug
 
     def _remove_card(self, card):
         """Remove a card from the grid. Called when the remove button is clicked in edit mode."""
@@ -434,7 +434,7 @@ class MainWindow(QMainWindow):
             
             # Set grid size from parser
             self.grid_size = (parser.n_rows, parser.n_cols)
-            print(f"Grid size: {self.grid_size}") # Debug
+            # print(f"Grid size: {self.grid_size}") # Debug
             
             # Set uniform stretch factors for grid
             for col in range(self.grid_size[1]):
@@ -459,7 +459,7 @@ class MainWindow(QMainWindow):
                 # Get widget class for non-separator widgets
                 widget_class = self._get_widget_info(widget_config.widget_type)
                 if not widget_class:
-                    print(f"Invalid widget type: {widget_config.widget_type}")  # Debug
+                    print(f"Invalid widget type: {widget_config.widget_type}")
                     continue
                 
                 # Use metric string directly without suffix

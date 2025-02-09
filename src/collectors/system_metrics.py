@@ -95,11 +95,21 @@ class SystemMetrics:
         
         # GPU metrics
         try:
+            # Add startupinfo to hide console window on Windows
+            startupinfo = None
+            if hasattr(subprocess, 'STARTUPINFO'):
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
             result = subprocess.run(
                 ['nvidia-smi', 
                  '--query-gpu=memory.total', 
                  '--format=csv,noheader,nounits'], 
-                capture_output=True, text=True, check=True
+                capture_output=True,
+                text=True,
+                check=True,
+                startupinfo=startupinfo  # Add this parameter
             )
             gpu_memory_total = float(result.stdout.strip())
             self.max_gpu_memory = gpu_memory_total / 1024  # Convert to GB
@@ -112,11 +122,21 @@ class SystemMetrics:
     def collect_gpu_metrics(self):
         """Get GPU temperature, memory and utilization using nvidia-smi."""
         try:
+            # Add startupinfo to hide console window on Windows
+            startupinfo = None
+            if hasattr(subprocess, 'STARTUPINFO'):
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
             result = subprocess.run(
                 ['nvidia-smi', 
                  '--query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total', 
                  '--format=csv,noheader,nounits'], 
-                capture_output=True, text=True, check=True
+                capture_output=True,
+                text=True,
+                check=True,
+                startupinfo=startupinfo  # Add this parameter
             )
             temp, util, mem_used, mem_total = map(float, result.stdout.strip().split(','))
             

@@ -1,20 +1,16 @@
-import os
-import subprocess
-from PIL import Image
+import PyInstaller.__main__
 
-def convert_png_to_ico():
-    """Convert PNG icon to ICO format"""
-    if not os.path.exists('src/assets/icon.ico'):
-        img = Image.open('src/assets/icon.png')
-        img.save('src/assets/icon.ico', format='ICO')
+def build_exe():
+    PyInstaller.__main__.run([
+        'src/main.py',                          # Replace with your main script name
+        '--onedir',                             # Creates a directory containing the executable
+        '--name=HWMom',                         # Replace with your app name
+        '--noconsole',                          # Remove if you want to show console
+        '--add-data=src/settings/*;settings/',  # Include all files from config folder
+        '--add-data=src/assets/*;assets/',      # Include all files from assets folder
+        '--clean',                              # Clean cache before building
+        '--noconfirm',
+    ])
 
-def build():
-    """Build the executable"""
-    # Convert icon if needed
-    convert_png_to_ico()
-    
-    # Run PyInstaller
-    subprocess.run(['pyinstaller', 'hw_mom.spec', '--clean'])
-
-if __name__ == '__main__':
-    build() 
+if __name__ == "__main__":
+    build_exe()
