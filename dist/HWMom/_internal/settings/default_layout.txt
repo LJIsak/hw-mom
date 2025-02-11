@@ -1,0 +1,9 @@
+theme: light
+[separator 1x5][separator 1x5]
+[separator 1x1][circle memory 4x4][circle ping 4x4 color b]
+[separator 1x1][][]
+[separator 1x1][][]
+[separator 1x1][][]
+[separator 1x1][graph gpu 2x4 color c][text cpu 2x2][text gpu_temp 2x2]
+[separator 1x1][][][][]
+[separator 1x5][separator 1x5]
