@@ -9,7 +9,6 @@ def build_exe():
         '--add-data=src/settings/*;settings/',  # Include all files from config folder
         '--add-data=src/assets/*;assets/',      # Include all files from assets folder
         '--clean',                              # Clean cache before building
-        '--strip',                              # Strip debug symbols from compiled binaries
         '--noupx',                              # Disable UPX compression; may improve stability
         '--noconfirm',
         
