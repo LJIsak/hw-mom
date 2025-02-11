@@ -13,10 +13,16 @@ def build_exe():
         '--noupx',                              # Disable UPX compression; may improve stability
         '--noconfirm',
         
-        # Add hidden imports for PyQt6 modules:
-        '--hidden-import=PyQt6.QtCore',
+        # Add all necessary PyQt6 modules
+        '--hidden-import=PyQt6',
         '--hidden-import=PyQt6.QtWidgets',
         '--hidden-import=PyQt6.QtGui',
+        '--hidden-import=PyQt6.QtCore',
+        '--hidden-import=PyQt6.sip',
+        
+        # Add PyQt6 plugins
+        '--collect-data=PyQt6',
+        '--collect-submodules=PyQt6',
     ])
 
 if __name__ == "__main__":
