@@ -18,11 +18,14 @@ def build_exe():
         '--hidden-import=PyQt6.QtWidgets',
         '--hidden-import=PyQt6.QtGui',
         '--hidden-import=PyQt6.QtCore',
-        '--hidden-import=PyQt6.sip',
+        #'--hidden-import=PyQt6.sip',
+        '--hidden-import=_socket',
         
         # Add PyQt6 plugins
-        '--collect-data=PyQt6',
-        '--collect-submodules=PyQt6',
+        '--collect-all=PyQt6',
+        # '--collect-data=PyQt6',
+        # '--collect-submodules=PyQt6',
+        # '--collect-binaries=PyQt6',        
     ])
 
 if __name__ == "__main__":
