@@ -19,7 +19,14 @@ def build_exe():
         '--hidden-import=PyQt6.QtGui',
         '--hidden-import=PyQt6.QtCore',
         #'--hidden-import=PyQt6.sip',
+
+        # Socket and multiprocessing dependencies
         '--hidden-import=_socket',
+        '--hidden-import=socket',
+        '--hidden-import=multiprocessing',
+        '--hidden-import=multiprocessing.pool',
+        '--hidden-import=multiprocessing.synchronize',
+        '--hidden-import=multiprocessing.heap',
         
         # Add PyQt6 plugins
         '--collect-all=PyQt6',
