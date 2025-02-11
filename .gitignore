@@ -10,7 +10,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-# dist/ # Upload the dist to simplify installation
+# dist/ # Upload dist to facilitate installation
 downloads/
 eggs/
 .eggs/
