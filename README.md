@@ -43,7 +43,10 @@ Layouts are created by placing widgets next to each other, separated by `[]` bra
 
 The default color theme can be specified by adding either `theme: dark` or `theme: light` to the beginning of the text file.
 
-> *Tip: because of dynamic resizing, only relative sizes matter. There is no difference between a lone 1x1 widget and a lone 2x2 widget.*
+> *Tip*: because of dynamic resizing, only relative sizes matter. There is no difference between a lone 1x1 widget and a lone 2x2 widget.
+
+> *Tip*: `'[... 1x1][... 1x1]'` is equivalent to `'[... 1x2]'`.
+
 
 **Example 1:**
 ```
@@ -88,4 +91,4 @@ theme: dark
 # Themes
 The available themes can be modified by editing the `settings/themes.json` file. See `settings/sample_themes.json` for examples.
 
-> *Tip: you can also modify the icon by renaming it to `icon.png` in the `assets` folder.*
+> *Tip*: you can also edit the icon by modifying `assets/icon.png`.

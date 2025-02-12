@@ -1,9 +1,6 @@
-theme: light
-[separator 1x5][separator 1x5]
-[separator 1x1][circle memory 4x4][circle ping 4x4 color b]
-[separator 1x1][][]
-[separator 1x1][][]
-[separator 1x1][][]
-[separator 1x1][graph gpu 2x4 color c][text cpu 2x2][text gpu_temp 2x2]
-[separator 1x1][][][][]
-[separator 1x5][separator 1x5]
+theme: dark
+[separator 1x1][graph gpu_temp 1x2 color b][circle gpu_temp 1x1 color b][text gpu_temp 1x1][separator 1x1]
+[separator 1x1][graph gpu 1x2 color b][circle gpu 1x1 color b][text gpu 1x1][separator 1x1]
+[separator 1x1][graph cpu 1x2][circle cpu 1x1][separator 1x2]
+[separator 1x1][graph memory 1x2 color c][circle memory 1x1 color c][separator 1x2]
+[separator 1x5]
