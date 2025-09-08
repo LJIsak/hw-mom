@@ -1,6 +1,6 @@
 # HWMom
 
-An ultra-lightweight hardware monitoring application that displays system performance metrics through an elegant dashboard with live-updating widgets. Designed to not look like ass.
+An ultra-lightweight hardware monitoring application that displays system metrics through an elegant dashboard with live-updating widgets. Designed for simplicity, elegance, and customization.
 
 **Screenshots:**
 
@@ -10,13 +10,13 @@ An ultra-lightweight hardware monitoring application that displays system perfor
 
 
 ## Features
-- Real-time monitoring of system metrics (CPU, RAM, etc.)
-- Customizable and sleek dashboard with various widget types
-- Modern, minimal dark/light theme interface
-- Very low resource footprint
+- Real-time monitoring of system metrics (CPU usage, RAM, temperatures, etc.)
+- Modern, minimalist interface
+- Customizable layouts, widgets, colors, and themes.
+- Extremely low resource footprint
 
 ## Installation
-Just install bro.
+Currently only supports building from source. Executable coming soon...
 
 ## Limitations
 - GPU metrics currently only supports NVIDIA GPUs.
