@@ -20,14 +20,16 @@ class AddCardDialog(QDialog):
             "Circle Widget",
             "Graph Widget",
             "Text Widget",
-            "Separator"
         ])
         type_layout.addWidget(self.type_combo)
         layout.addLayout(type_layout)
         
+        # Connect type_combo to a handler
+        self.type_combo.currentTextChanged.connect(self._handle_widget_type_change)
+        
         # Metric selection
-        metric_layout = QHBoxLayout()
-        metric_layout.addWidget(QLabel("Metric:"))
+        self.metric_layout = QHBoxLayout()
+        self.metric_layout.addWidget(QLabel("Metric:"))
         self.metric_combo = QComboBox()
         self.metric_combo.addItems([
             "Memory Usage",     # memory
@@ -38,11 +40,11 @@ class AddCardDialog(QDialog):
             "Fan Speed",        # fan_speed
             "Ping"              # ping
         ])
-        metric_layout.addWidget(self.metric_combo)
-        layout.addLayout(metric_layout)
+        self.metric_layout.addWidget(self.metric_combo)
+        layout.addLayout(self.metric_layout)
         
         # Size group
-        size_group = QGroupBox("Size")
+        self.size_group = QGroupBox("Size")
         size_layout = QHBoxLayout()
         
         # Row span (height)
@@ -63,8 +65,8 @@ class AddCardDialog(QDialog):
         col_layout.addWidget(self.col_spin)
         size_layout.addLayout(col_layout)
         
-        size_group.setLayout(size_layout)
-        layout.addWidget(size_group)
+        self.size_group.setLayout(size_layout)
+        layout.addWidget(self.size_group)
         
         # Position group
         pos_group = QGroupBox("Position")
@@ -92,7 +94,7 @@ class AddCardDialog(QDialog):
         layout.addWidget(pos_group)
         
         # Add style selections group
-        style_group = QGroupBox("Style")
+        self.style_group = QGroupBox("Style")
         style_layout = QFormLayout()
         
         # Background color selection
@@ -129,8 +131,8 @@ class AddCardDialog(QDialog):
         style_layout.addRow("Background:", bg_widget)
         style_layout.addRow("Accent:", accent_widget)
         
-        style_group.setLayout(style_layout)
-        layout.addWidget(style_group)
+        self.style_group.setLayout(style_layout)
+        layout.addWidget(self.style_group)
         
         # Dialog buttons
         buttons = QDialogButtonBox(
@@ -142,6 +144,23 @@ class AddCardDialog(QDialog):
         layout.addWidget(buttons)
         
         self.setLayout(layout)
+        
+        # Initial state update
+        self._handle_widget_type_change(self.type_combo.currentText())
+
+    def _handle_widget_type_change(self, widget_type):
+        """Show/hide metric selection based on widget type."""
+        is_separator = (widget_type == "Separator")
+        
+        # Iterate over widgets in metric_layout and hide them
+        for i in range(self.metric_layout.count()):
+            widget = self.metric_layout.itemAt(i).widget()
+            if widget:
+                widget.setVisible(not is_separator)
+        
+        # Also hide/show style and size groups
+        self.size_group.setVisible(not is_separator)
+        self.style_group.setVisible(not is_separator)
 
     def _get_metric_str(self, display_name: str) -> str:
         """Convert display name to metric string."""
@@ -158,10 +177,12 @@ class AddCardDialog(QDialog):
 
     def get_values(self):
         """Get the dialog values."""
+        widget_type_text = self.type_combo.currentText().split(' ')[0].lower()
+        
         return {
             'size': (self.row_spin.value(), self.col_spin.value()),
             'position': (self.row_pos_spin.value() - 1, self.col_pos_spin.value() - 1),
-            'widget_type': self.type_combo.currentText(),
+            'widget_type': widget_type_text,
             'metric_str': self._get_metric_str(self.metric_combo.currentText()),
             'color_scheme': 'B' if self.bg_b.isChecked() else 'A',
             'accent_scheme': (

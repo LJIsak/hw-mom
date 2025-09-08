@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QPushButton, QVBoxLayout
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPainter
+from PyQt6.QtCore import Qt, QMimeData
+from PyQt6.QtGui import QColor, QPainter, QDrag, QPixmap
 from theme_manager import theme
 
 class RemoveButton(QPushButton):
@@ -50,6 +50,10 @@ class Card(QFrame):
         # print(f"Creating card with color scheme: {color_scheme}")  # Debug
         self.color_scheme = color_scheme
         
+        # Draggable state
+        self.is_draggable = False
+        self.start_pos = None
+        
         # Create layout
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(8, 8, 8, 8)
@@ -77,6 +81,57 @@ class Card(QFrame):
         # Create remove button
         self.remove_btn = RemoveButton(self)
     
+    def set_draggable(self, draggable: bool):
+        """Set the draggable state of the card."""
+        self.is_draggable = draggable
+
+    def mousePressEvent(self, event):
+        """Handle mouse press to initiate a drag."""
+        if self.is_draggable and event.button() == Qt.MouseButton.LeftButton:
+            self.start_pos = event.pos()
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        """Handle mouse move to perform the drag and drop."""
+        if (self.is_draggable and 
+            event.buttons() == Qt.MouseButton.LeftButton and
+            self.start_pos is not None and
+            (event.pos() - self.start_pos).manhattanLength() > 10):
+            
+            drag = QDrag(self)
+            mime_data = QMimeData()
+
+            # Use the card's object ID to uniquely identify it during the drag
+            mime_data.setText(f'card-drag:{id(self)}')
+            drag.setMimeData(mime_data)
+
+            # Create a semi-transparent pixmap of the widget for the drag preview
+            pixmap = QPixmap(self.size())
+            pixmap.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setOpacity(0.7)
+            
+            # Use the card's background color
+            brush_color = theme.get_color("card_background")
+            painter.setBrush(brush_color)
+            painter.setPen(Qt.PenStyle.NoPen)
+
+            # Draw the rounded rectangle
+            border_radius = 12
+            painter.drawRoundedRect(pixmap.rect(), border_radius, border_radius)
+            
+            painter.end()
+            
+            drag.setPixmap(pixmap)
+            drag.setHotSpot(event.pos())
+
+            # Start the drag operation
+            drag.exec(Qt.DropAction.MoveAction)
+            self.start_pos = None
+
+        super().mouseMoveEvent(event)
+
     def _update_style(self):
         """Update the card's style based on current theme"""
         # All cards use the same background color now

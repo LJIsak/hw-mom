@@ -1,6 +1,12 @@
 theme: dark
-[separator 1x1][graph gpu_temp 1x2 color b][circle gpu_temp 1x1 color b][text gpu_temp 1x1][separator 1x1]
-[separator 1x1][graph gpu 1x2 color b][circle gpu 1x1 color b][text gpu 1x1][separator 1x1]
-[separator 1x1][graph cpu 1x2][circle cpu 1x1][separator 1x2]
-[separator 1x1][graph memory 1x2 color c][circle memory 1x1 color c][separator 1x2]
-[separator 1x5]
+size: 6x5
+widget=graph, metric=gpu_temp, start_x=1, end_x=2, start_y=0, end_y=0, color_scheme=B
+widget=circle, metric=gpu_temp, start_x=3, end_x=3, start_y=0, end_y=0, color_scheme=B
+widget=text, metric=gpu_temp, start_x=4, end_x=4, start_y=0, end_y=0
+widget=graph, metric=gpu, start_x=1, end_x=2, start_y=1, end_y=1, color_scheme=B
+widget=circle, metric=gpu, start_x=3, end_x=3, start_y=1, end_y=1, color_scheme=B
+widget=text, metric=gpu, start_x=4, end_x=4, start_y=1, end_y=1
+widget=graph, metric=cpu, start_x=1, end_x=2, start_y=2, end_y=2
+widget=circle, metric=cpu, start_x=3, end_x=3, start_y=2, end_y=2
+widget=graph, metric=memory, start_x=1, end_x=2, start_y=3, end_y=3, color_scheme=C
+widget=circle, metric=memory, start_x=3, end_x=3, start_y=3, end_y=3, color_scheme=C

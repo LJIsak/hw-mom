@@ -16,7 +16,7 @@ An ultra-lightweight hardware monitoring application that displays system metric
 - Extremely low resource footprint
 
 ## Installation
-Currently only supports building from source. Executable coming soon...
+Currently only supports building from source (run `build.py`). Executable coming soon...
 
 ## Limitations
 - GPU metrics currently only supports NVIDIA GPUs.
