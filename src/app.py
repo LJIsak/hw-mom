@@ -166,11 +166,6 @@ class MainWindow(QMainWindow):
         self.cards = []
         self.placeholders = []
         
-        # Create drop indicator
-        self.drop_indicator = QFrame(self.main_widget)
-        self.drop_indicator.setObjectName("dropIndicator")
-        self.drop_indicator.hide()
-        
         # Set initial grid size
         self.grid_size = (5, 6)  # Starting with a 5x6 grid
         
@@ -194,7 +189,7 @@ class MainWindow(QMainWindow):
 
         # Create grid layout for cards
         self.grid_layout = QGridLayout()
-        self.grid_layout.setSpacing(16)
+        self.grid_layout.setSpacing(0) # Spacing now handled by card
 
         # Add layouts to main layout
         main_layout.addLayout(self.grid_layout)
@@ -270,8 +265,8 @@ class MainWindow(QMainWindow):
         show = self.settings_button.isChecked()
         self.add_button.setVisible(show)
         for card in self.cards:
-            if hasattr(card, 'remove_btn'):
-                card.remove_btn.setVisible(show)
+            # if hasattr(card, 'remove_btn'):
+            #     card.remove_btn.setVisible(show)
             if hasattr(card, 'set_draggable'):
                 card.set_draggable(show)
         self._update_placeholders()
@@ -307,17 +302,6 @@ class MainWindow(QMainWindow):
         for placeholder in self.placeholders:
             placeholder._update_style()
         
-        # Update drop indicator style
-        border_color = theme.get_color("chart_legend")
-        border_color.setAlpha(100)
-        self.drop_indicator.setStyleSheet(f"""
-            QFrame#dropIndicator {{
-                background: transparent;
-                border: 2px dashed {border_color.name()};
-                border-radius: 12px;
-            }}
-        """)
-    
     def _get_widget_info(self, widget_type: str) -> type:
         """Get the widget class for a given widget type."""
         widget_types = {
@@ -428,8 +412,8 @@ class MainWindow(QMainWindow):
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
         # Add remove button and connect it
-        card.remove_btn.clicked.connect(lambda: self._remove_card(card))
-        card.remove_btn.setVisible(self.settings_button.isChecked())
+        # card.remove_btn.clicked.connect(lambda: self._remove_card(card))
+        # card.remove_btn.setVisible(self.settings_button.isChecked())
         
         # Add to grid and track position
         self.grid_layout.addWidget(card, row, col, size[0], size[1])
@@ -472,29 +456,29 @@ class MainWindow(QMainWindow):
             placeholder.deleteLater()
         self.placeholders.clear()
 
-        if self.settings_button.isChecked():
-            # Build an occupancy grid from the layout manager's perspective
-            occupied = [[False for _ in range(self.grid_size[1])] for _ in range(self.grid_size[0])]
+        # if self.settings_button.isChecked():
+        #     # Build an occupancy grid from the layout manager's perspective
+        #     occupied = [[False for _ in range(self.grid_size[1])] for _ in range(self.grid_size[0])]
             
-            for card in self.cards:
-                index = self.grid_layout.indexOf(card)
-                if index != -1:
-                    r, c, rs, cs = self.grid_layout.getItemPosition(index)
-                    for i in range(r, r + rs):
-                        for j in range(c, c + cs):
-                            if i < self.grid_size[0] and j < self.grid_size[1]:
-                                occupied[i][j] = True
+        #     for card in self.cards:
+        #         index = self.grid_layout.indexOf(card)
+        #         if index != -1:
+        #             r, c, rs, cs = self.grid_layout.getItemPosition(index)
+        #             for i in range(r, r + rs):
+        #                 for j in range(c, c + cs):
+        #                     if i < self.grid_size[0] and j < self.grid_size[1]:
+        #                         occupied[i][j] = True
             
-            # Add placeholders to unoccupied cells
-            for r in range(self.grid_size[0]):
-                for c in range(self.grid_size[1]):
-                    if not occupied[r][c]:
-                        placeholder = PlaceholderCard()
-                        placeholder.add_button.clicked.connect(
-                            lambda _, r=r, c=c: self._add_card_from_placeholder(r, c)
-                        )
-                        self.grid_layout.addWidget(placeholder, r, c, 1, 1)
-                        self.placeholders.append(placeholder)
+        #     # Add placeholders to unoccupied cells
+        #     for r in range(self.grid_size[0]):
+        #         for c in range(self.grid_size[1]):
+        #             if not occupied[r][c]:
+        #                 placeholder = PlaceholderCard()
+        #                 placeholder.add_button.clicked.connect(
+        #                     lambda _, r=r, c=c: self._add_card_from_placeholder(r, c)
+        #                 )
+        #                 self.grid_layout.addWidget(placeholder, r, c, 1, 1)
+        #                 self.placeholders.append(placeholder)
 
     def dragEnterEvent(self, event):
         """Accept drag events from cards."""
@@ -505,7 +489,6 @@ class MainWindow(QMainWindow):
 
     def dragLeaveEvent(self, event):
         """Hide the drop indicator when the drag leaves the window."""
-        self.drop_indicator.hide()
         event.accept()
 
     def _nearest_cell(self, pos_in_grid: QPoint) -> tuple[int, int]:
@@ -567,13 +550,11 @@ class MainWindow(QMainWindow):
         try:
             card_id = int(mime_text.split(':')[1])
         except (IndexError, ValueError):
-            self.drop_indicator.hide()
             event.ignore()
             return
 
         card = self._get_card_from_id(card_id)
         if not card:
-            self.drop_indicator.hide()
             event.ignore()
             return
         idx = self.grid_layout.indexOf(card)
@@ -591,21 +572,12 @@ class MainWindow(QMainWindow):
         # Check if the drop is valid
         dragged_card = self._get_card_from_id(card_id)
         if self._is_drop_area_free(target_row, target_col, row_span, col_span, dragged_card):
-            # Get the geometry of the target area in grid coords and translate to widget coords
-            start_rect = self.grid_layout.cellRect(target_row, target_col)
-            end_rect = self.grid_layout.cellRect(target_row + row_span - 1, target_col + col_span - 1)
-            target_rect = start_rect.united(end_rect).translated(grid_geom.topLeft())
-            
-            self.drop_indicator.setGeometry(target_rect)
-            self.drop_indicator.show()
             event.acceptProposedAction()
         else:
-            self.drop_indicator.hide()
             event.ignore()
 
     def dropEvent(self, event):
         """Perform move on drop and hide indicator."""
-        self.drop_indicator.hide()
         mime_text = event.mimeData().text()
         if not mime_text.startswith('card-drag:'):
             event.ignore()

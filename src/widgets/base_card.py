@@ -72,14 +72,14 @@ class Card(QFrame):
         
         # Add shadow effect
         shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(30)
-        shadow.setXOffset(0)
+        shadow.setBlurRadius(20)
+        shadow.setXOffset(2)
         shadow.setYOffset(6)
-        shadow.setColor(QColor(0, 0, 0, 16))
+        shadow.setColor(QColor(0, 0, 0, 10))
         self.setGraphicsEffect(shadow)
         
         # Create remove button
-        self.remove_btn = RemoveButton(self)
+        # self.remove_btn = RemoveButton(self)
     
     def set_draggable(self, draggable: bool):
         """Set the draggable state of the card."""
@@ -141,15 +141,9 @@ class Card(QFrame):
             QFrame#card {{
                 background-color: {bg_color};
                 border-radius: 12px;
-                margin: 8px;
+                margin: 16px;
             }}
         """)
     
     def resizeEvent(self, event):
-        """Handle resize to position remove button"""
-        super().resizeEvent(event)
-        # Position remove button in top-right corner
-        self.remove_btn.move(
-            self.width() - self.remove_btn.width() - 8,
-            8
-        ) 
+        """Handle resize of cards during edit mode."""
