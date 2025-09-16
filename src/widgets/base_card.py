@@ -72,9 +72,9 @@ class Card(QFrame):
         
         # Add shadow effect
         shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
+        shadow.setBlurRadius(32)
         shadow.setXOffset(2)
-        shadow.setYOffset(6)
+        shadow.setYOffset(4)
         shadow.setColor(QColor(0, 0, 0, 10))
         self.setGraphicsEffect(shadow)
         
@@ -106,7 +106,7 @@ class Card(QFrame):
             drag.setMimeData(mime_data)
 
             # Create a semi-transparent pixmap of the widget for the drag preview
-            pixmap = QPixmap(self.size())
+            pixmap = QPixmap(self.size()*0.88)
             pixmap.fill(Qt.GlobalColor.transparent)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
