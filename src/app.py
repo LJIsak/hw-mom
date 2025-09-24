@@ -7,7 +7,8 @@ from widgets.card_dialog import AddCardDialog
 from widgets.circle_widget import CircleWidget
 from widgets.graph_widget import GraphWidget
 from widgets.text_widget import TextWidget
-from widgets.placeholder_card import PlaceholderCard
+from widgets.resize_preview import ResizePreview
+from widgets.landing_preview import LandingPreview
 from theme_manager import theme
 from collectors.system_metrics import SystemMetrics
 from layout_parser import LayoutParser
@@ -17,7 +18,7 @@ from typing import Optional
 
 class SettingsButton(QPushButton):
     def __init__(self, parent=None):
-        super().__init__("⚙", parent)
+        super().__init__("+", parent)
         self.setObjectName("settingsButton")
         self.setFixedSize(36, 36)
         self.setCheckable(True)
@@ -25,7 +26,8 @@ class SettingsButton(QPushButton):
     
     def _update_colors(self):
         # Get base color and create darker version
-        base_color = theme.get_color("edit_mode_button")
+        base_color = theme.get_color("color_widget")
+        text_color = theme.get_color("color_font_secondary")
         hover_color = QColor(
             int(base_color.red() * 0.8),
             int(base_color.green() * 0.8),
@@ -40,7 +42,7 @@ class SettingsButton(QPushButton):
             QPushButton#settingsButton {{
                 background-color: {base_color.name()};
                 border-radius: 18px;
-                color: white;
+                color: {text_color.name()};
                 font-size: 20px;
                 font-weight: bold;
                 border: none;
@@ -51,19 +53,21 @@ class SettingsButton(QPushButton):
             }}
             QPushButton#settingsButton:pressed, QPushButton#settingsButton:checked {{
                 background-color: {pressed_color.name()};
+                color: {text_color.name()};
             }}
         """)
 
 class AddCardButton(QPushButton):
     def __init__(self, parent=None):
-        super().__init__("+", parent)
+        super().__init__("⚙", parent)
         self.setObjectName("addCardButton")
         self.setFixedSize(36, 36)
         self._update_colors()
     
     def _update_colors(self):
         # Get base color and create hover/pressed colors
-        base_color = theme.get_color("add_button")
+        base_color = theme.get_color("color_widget")
+        text_color = theme.get_color("color_font_secondary")
         hover_color = QColor(
             int(base_color.red() * 0.8),
             int(base_color.green() * 0.8),
@@ -78,7 +82,7 @@ class AddCardButton(QPushButton):
             QPushButton#addCardButton {{
                 background-color: {base_color.name()};
                 border-radius: 18px;
-                color: white;
+                color: {text_color.name()};
                 font-size: 20px;
                 font-weight: bold;
                 border: none;
@@ -96,14 +100,14 @@ class ThemeButton(QPushButton):
     def __init__(self, parent=None):
         super().__init__("☀", parent)
         self.setObjectName("themeButton")
-        self.setFixedSize(28, 28)
+        self.setFixedSize(36, 36)
         self.setCheckable(True)
         self._update_colors()
 
     def _update_colors(self):
         # Get base color and create darker version
-        text_color = theme.get_color("text_small")
-        base_color = theme.get_color("card_background")
+        text_color = theme.get_color("color_font_secondary")
+        base_color = theme.get_color("color_widget")
         hover_color = QColor(
             int(base_color.red() * 0.8),
             int(base_color.green() * 0.8),
@@ -117,12 +121,13 @@ class ThemeButton(QPushButton):
         self.setStyleSheet(f"""
             QPushButton#themeButton {{
                 background-color: {base_color.name()};
-                border-radius: 14px;
+                border-radius: 18px;
                 color: {text_color.name()};
-                font-size: 14px;
-                font-weight: normal;
+                font-size: 20px;
+                font-weight: bold;
                 border: none;
-                padding-top: -1px;
+                
+                padding-top: -4px;
             }}
             QPushButton#themeButton:hover {{
                 background-color: {hover_color.name()};
@@ -153,9 +158,13 @@ class MainWindow(QMainWindow):
         self.main_widget = QWidget()
         self.setCentralWidget(self.main_widget)
         
+        # Add resize preview and landing preview widgets
+        self.resize_preview = ResizePreview(self.main_widget)
+        self.landing_preview = LandingPreview(self.main_widget)
+        
         # Set the background color
         palette = self.main_widget.palette()
-        palette.setColor(QPalette.ColorRole.Window, theme.get_color("background"))
+        palette.setColor(QPalette.ColorRole.Window, theme.get_color("color_background"))
         self.main_widget.setAutoFillBackground(True)
         self.main_widget.setPalette(palette)
         
@@ -164,7 +173,12 @@ class MainWindow(QMainWindow):
         
         # Track cards for edit mode
         self.cards = []
-        self.placeholders = []
+        
+        # Track resizing state
+        self.resizing_card = None
+        self.resize_handle_pos = None
+        self.resize_start_geom = None
+        self.current_resize_geom = None
         
         # Set initial grid size
         self.grid_size = (5, 6)  # Starting with a 5x6 grid
@@ -212,6 +226,7 @@ class MainWindow(QMainWindow):
         self.theme_button = ThemeButton(self)
         self.theme_button.clicked.connect(self._toggle_theme)
         self.theme_button.raise_()
+        self.theme_button.hide()
         
         self._position_floating_buttons()
     
@@ -222,19 +237,19 @@ class MainWindow(QMainWindow):
         margin_y = self.height() - 24
         margin_x_right = self.width() - margin_x
         
-        # Position add button (bottom right)
+        # Position settings button (bottom right)
         self.settings_button.move(
             margin_x_right - self.settings_button.width(), 
             margin_y - self.settings_button.height())
         
-        # Position edit button to the left of add button
+        # Position add button to the left of the settings button
         self.add_button.move(
-            self.settings_button.x() - self.add_button.width() - 12, 
+            self.settings_button.x() - self.add_button.width() - 12,
             margin_y - self.add_button.height())
-        
-        # Position theme button (bottom left)
+
+        # Position theme button to the left of the add button
         self.theme_button.move(
-            margin_x + self.theme_button.width() - 16, 
+            self.add_button.x() - self.theme_button.width() - 12, 
             margin_y - self.theme_button.height())
     
     def resizeEvent(self, event):
@@ -264,13 +279,15 @@ class MainWindow(QMainWindow):
         """Toggle visibility of remove buttons on all cards"""
         show = self.settings_button.isChecked()
         self.add_button.setVisible(show)
+        self.theme_button.setVisible(show)
         for card in self.cards:
             # if hasattr(card, 'remove_btn'):
             #     card.remove_btn.setVisible(show)
             if hasattr(card, 'set_draggable'):
                 card.set_draggable(show)
-        self._update_placeholders()
-    
+            if hasattr(card, 'set_edit_mode'):
+                card.set_edit_mode(show)
+        
     def _toggle_theme(self):
         """Toggle between light and dark themes"""
         if self.theme_button.isChecked():
@@ -286,7 +303,7 @@ class MainWindow(QMainWindow):
         """Update the application theme"""
         # Update background color
         palette = self.main_widget.palette()
-        palette.setColor(QPalette.ColorRole.Window, theme.get_color("background"))
+        palette.setColor(QPalette.ColorRole.Window, theme.get_color("color_background"))
         self.main_widget.setPalette(palette)
         
         # Update all cards
@@ -298,9 +315,6 @@ class MainWindow(QMainWindow):
         self.settings_button._update_colors()
         self.theme_button._update_colors()
         
-        # Update placeholders if they exist
-        for placeholder in self.placeholders:
-            placeholder._update_style()
         
     def _get_widget_info(self, widget_type: str) -> type:
         """Get the widget class for a given widget type."""
@@ -329,33 +343,6 @@ class MainWindow(QMainWindow):
     def _add_card_from_dialog(self):
         """Show dialog and add card based on user input"""
         dialog = AddCardDialog(self)
-        if dialog.exec():
-            values = dialog.get_values()
-            
-            # Get widget class
-            widget_class = self._get_widget_info(values['widget_type'])
-            if not widget_class:
-                print(f"Invalid widget type: {values['widget_type']}")
-                return
-
-            # Use metric string directly without suffix
-            metric_str = values['metric_str']
-
-            self._place_card(
-                size=values['size'],
-                requested_position=values['position'],
-                widget_class=widget_class,
-                metric_str=metric_str,
-                color_scheme=values['color_scheme'],
-                accent_scheme=values['accent_scheme']
-            )
-
-    def _add_card_from_placeholder(self, row, col):
-        """Show dialog and add card, with position pre-filled."""
-        dialog = AddCardDialog(self)
-        dialog.row_pos_spin.setValue(row + 1)
-        dialog.col_pos_spin.setValue(col + 1)
-        
         if dialog.exec():
             values = dialog.get_values()
             
@@ -408,6 +395,11 @@ class MainWindow(QMainWindow):
         # Create the card with the widget
         card = Card(widget=widget, color_scheme=color_scheme)
         
+        # Connect resize signals
+        card.resize_started.connect(lambda pos, c=card: self._handle_resize_started(c, pos))
+        card.resizing.connect(lambda pos, delta, c=card: self._handle_resizing(c, pos, delta))
+        card.resize_finished.connect(lambda c=card: self._handle_resize_finished(c))
+        
         # Set size policy for all cards
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
@@ -424,7 +416,6 @@ class MainWindow(QMainWindow):
                 self.grid_positions[(r, c)] = card
         
         self.cards.append(card)
-        self._update_placeholders()
         # print(f"Added {widget_class.__name__} card at " 
         #       f"position ({row}, {col}) with size {size}") # Debug
 
@@ -443,52 +434,21 @@ class MainWindow(QMainWindow):
         self.cards.remove(card)
         self.grid_layout.removeWidget(card)
         card.deleteLater()
-        self._update_placeholders()
 
     def _compactify_grid(self):
         """Remove empty rows and columns from the grid. Called after a card is removed."""
-
-    def _update_placeholders(self):
-        """Create placeholder cards in empty grid cells when in edit mode."""
-        # Clear existing placeholders
-        for placeholder in self.placeholders:
-            self.grid_layout.removeWidget(placeholder)
-            placeholder.deleteLater()
-        self.placeholders.clear()
-
-        # if self.settings_button.isChecked():
-        #     # Build an occupancy grid from the layout manager's perspective
-        #     occupied = [[False for _ in range(self.grid_size[1])] for _ in range(self.grid_size[0])]
-            
-        #     for card in self.cards:
-        #         index = self.grid_layout.indexOf(card)
-        #         if index != -1:
-        #             r, c, rs, cs = self.grid_layout.getItemPosition(index)
-        #             for i in range(r, r + rs):
-        #                 for j in range(c, c + cs):
-        #                     if i < self.grid_size[0] and j < self.grid_size[1]:
-        #                         occupied[i][j] = True
-            
-        #     # Add placeholders to unoccupied cells
-        #     for r in range(self.grid_size[0]):
-        #         for c in range(self.grid_size[1]):
-        #             if not occupied[r][c]:
-        #                 placeholder = PlaceholderCard()
-        #                 placeholder.add_button.clicked.connect(
-        #                     lambda _, r=r, c=c: self._add_card_from_placeholder(r, c)
-        #                 )
-        #                 self.grid_layout.addWidget(placeholder, r, c, 1, 1)
-        #                 self.placeholders.append(placeholder)
 
     def dragEnterEvent(self, event):
         """Accept drag events from cards."""
         if event.mimeData().text().startswith('card-drag:'):
             event.acceptProposedAction()
+            self.landing_preview.show()
         else:
             event.ignore()
 
     def dragLeaveEvent(self, event):
-        """Hide the drop indicator when the drag leaves the window."""
+        """Hide the landing preview when the drag leaves the window."""
+        self.landing_preview.hide()
         event.accept()
 
     def _nearest_cell(self, pos_in_grid: QPoint) -> tuple[int, int]:
@@ -541,7 +501,7 @@ class MainWindow(QMainWindow):
         return top_left_r, top_left_c
 
     def dragMoveEvent(self, event):
-        """Show and position the drop indicator."""
+        """Show and position the landing preview."""
         mime_text = event.mimeData().text()
         if not mime_text.startswith('card-drag:'):
             event.ignore()
@@ -563,8 +523,7 @@ class MainWindow(QMainWindow):
         # Map pointer position into grid layout coordinate space
         pos_in_window = event.position().toPoint()
         pos_in_widget = self.main_widget.mapFrom(self, pos_in_window)
-        grid_geom = self.grid_layout.geometry()  # in main_widget coords
-        pos_in_grid = QPoint(pos_in_widget.x() - grid_geom.x(), pos_in_widget.y() - grid_geom.y())
+        pos_in_grid = QPoint(pos_in_widget.x(), pos_in_widget.y())
 
         # Compute best top-left position based on nearest cell and clamp to fit span
         target_row, target_col = self._candidate_top_left(pos_in_grid, row_span, col_span)
@@ -572,12 +531,17 @@ class MainWindow(QMainWindow):
         # Check if the drop is valid
         dragged_card = self._get_card_from_id(card_id)
         if self._is_drop_area_free(target_row, target_col, row_span, col_span, dragged_card):
+            self._update_landing_preview(target_row, target_col, row_span, col_span)
+            self.landing_preview.show()
+            self.landing_preview.raise_()
             event.acceptProposedAction()
         else:
+            self.landing_preview.hide()
             event.ignore()
 
     def dropEvent(self, event):
         """Perform move on drop and hide indicator."""
+        self.landing_preview.hide()
         mime_text = event.mimeData().text()
         if not mime_text.startswith('card-drag:'):
             event.ignore()
@@ -619,8 +583,116 @@ class MainWindow(QMainWindow):
         for r in range(target_row, target_row + row_span):
             for c in range(target_col, target_col + col_span):
                 self.grid_positions[(r, c)] = source_card
-        self._update_placeholders()
         event.acceptProposedAction()
+
+    def _handle_resize_started(self, card, position):
+        if self.resizing_card:
+            return  # Avoid starting a new resize if one is in progress
+        
+        idx = self.grid_layout.indexOf(card)
+        if idx != -1:
+            r, c, rs, cs = self.grid_layout.getItemPosition(idx)
+            self.resizing_card = card
+            self.resize_handle_pos = position
+            self.resize_start_geom = (r, c, rs, cs)
+            self.current_resize_geom = (r, c, rs, cs)
+            
+            # Show preview at the current card's geometry
+            self._update_resize_preview(r, c, rs, cs)
+            self.resize_preview.show()
+            self.resize_preview.raise_()
+
+    def _handle_resizing(self, card, position, delta):
+        if not self.resizing_card or card is not self.resizing_card:
+            return
+
+        cell_width = self.grid_layout.cellRect(0, 0).width()
+        cell_height = self.grid_layout.cellRect(0, 0).height()
+        
+        # Prevent division by zero if grid isn't fully formed yet
+        if cell_width == 0 or cell_height == 0:
+            return
+
+        # Calculate change in grid cells
+        dc = round(delta.x() / cell_width)
+        dr = round(delta.y() / cell_height)
+        
+        r, c, rs, cs = self.resize_start_geom
+        
+        # Calculate new geometry based on which handle is being dragged
+        if self.resize_handle_pos == 'right':
+            cs = max(1, cs + dc)
+        elif self.resize_handle_pos == 'left':
+            c = min(max(0, c + dc), c + cs - 1)
+            cs = max(1, cs - dc)
+        elif self.resize_handle_pos == 'bottom':
+            rs = max(1, rs + dr)
+        elif self.resize_handle_pos == 'top':
+            r = min(max(0, r + dr), r + rs - 1)
+            rs = max(1, rs - dr)
+        
+        # If geometry is valid and has changed, update the preview
+        if (r, c, rs, cs) != self.current_resize_geom:
+            if self._is_drop_area_free(r, c, rs, cs, self.resizing_card):
+                self.current_resize_geom = (r, c, rs, cs)
+                self._update_resize_preview(r, c, rs, cs)
+
+    def _handle_resize_finished(self, card):
+        if not self.resizing_card:
+            return
+            
+        self.resize_preview.hide()
+
+        # Get the final geometry from the preview
+        r, c, rs, cs = self.current_resize_geom
+        start_r, start_c, _, _ = self.resize_start_geom
+
+        # Update card only if the geometry has changed
+        if (r, c, rs, cs) != self.resize_start_geom:
+            # Remove old positions
+            positions_to_remove = [pos for pos, c in self.grid_positions.items() if c == self.resizing_card]
+            for pos in positions_to_remove:
+                del self.grid_positions[pos]
+            
+            # Update layout
+            self.grid_layout.removeWidget(self.resizing_card)
+            self.grid_layout.addWidget(self.resizing_card, r, c, rs, cs)
+
+            # Add new positions
+            for i in range(r, r + rs):
+                for j in range(c, c + cs):
+                    self.grid_positions[(i, j)] = self.resizing_card
+
+        # Reset resizing state
+        self.resizing_card = None
+        self.resize_handle_pos = None
+        self.resize_start_geom = None
+        self.current_resize_geom = None
+
+    def _update_resize_preview(self, r, c, rs, cs):
+        """Update the geometry of the resize preview widget."""
+        # Calculate the top-left corner of the starting cell
+        start_rect = self.grid_layout.cellRect(r, c)
+        
+        # Calculate the bottom-right corner of the ending cell
+        end_rect = self.grid_layout.cellRect(r + rs - 1, c + cs - 1)
+        
+        # Combine to get the full geometry in grid layout coordinates
+        preview_rect = start_rect.united(end_rect)
+        
+        self.resize_preview.setGeometry(preview_rect)
+
+    def _update_landing_preview(self, r, c, rs, cs):
+        """Update the geometry of the landing preview widget."""
+        start_rect = self.grid_layout.cellRect(r, c)
+        end_rect = self.grid_layout.cellRect(r + rs - 1, c + cs - 1)
+        preview_rect = start_rect.united(end_rect)
+        
+        # Adjust for card margin
+        margin = 16
+        preview_rect.adjust(margin, margin, -margin, -margin)
+        
+        self.landing_preview.setGeometry(preview_rect)
 
     def _load_layout(self):
         """Load and apply the default layout."""
@@ -679,7 +751,6 @@ class MainWindow(QMainWindow):
                 metric_str="cpu",
                 color_scheme='A'
             )
-        self._update_placeholders()
 
     def _get_card_from_id(self, card_id: int) -> Optional[Card]:
         """Return the card instance matching the given object id, if any."""

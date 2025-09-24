@@ -22,8 +22,8 @@ class TextValueLabel(QLabel):
         """Update the label style with current theme colors"""
         self.setStyleSheet(f"""
             QLabel {{
-                color: {theme.get_color("text_big").name()};
-                font-size: {int(theme.get_font_size() * 1.2)}px;
+                color: {theme.get_color("color_font_primary").name()};
+                font-size: {int(theme.get_font_size_primary() * 1.2)}px;
                 font-weight: 500;
                 padding: 8px;
             }}
@@ -57,8 +57,8 @@ class TextWidget(BaseWidget):
         self.header = QLabel(title)
         self.header.setStyleSheet(f"""
             QLabel {{
-                color: {theme.get_color("text_small").name()};
-                font-size: 12px;
+                color: {theme.get_color("color_font_secondary").name()};
+                font-size: {theme.get_font_size_secondary()}px;
                 font-weight: 400;
             }}
         """)
@@ -83,6 +83,18 @@ class TextWidget(BaseWidget):
         
         # Initial update
         self.update_display()
+        self._update_style()
+
+    def _update_style(self):
+        """Update the style of the widget when the theme changes."""
+        self.header.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.get_color("color_font_secondary").name()};
+                font-size: {theme.get_font_size_secondary()}px;
+                font-weight: 400;
+            }}
+        """)
+        self.value_label._update_style()
 
     def update_display(self):
         """Update the displayed text value by averaging the 4 most recent values."""

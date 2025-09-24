@@ -87,7 +87,7 @@ class BaseWidget(QWidget):
     def get_chart_color(self) -> QColor:
         """Get the appropriate chart color based on color scheme."""
         if self.color_scheme == 'B':
-            return theme.get_color("chart_2")
+            return theme.get_color("color_accent_2")
         elif self.color_scheme == 'C':
-            return theme.get_color("chart_3")
-        return theme.get_color("chart")  # Default to chart color for scheme A 
+            return theme.get_color("color_accent_3")
+        return theme.get_color("color_accent_1")  # Default to chart color for scheme A 

@@ -38,7 +38,7 @@ class GraphArea(QWidget):
         painter.setFont(font)
         
         # Draw horizontal lines and labels
-        line_color = QColor(theme.get_color("chart_legend"))
+        line_color = QColor(theme.get_color("color_font_legend"))
         line_color.setAlpha(160)
         
         # Draw horizontal lines for percentages (including 0%)
@@ -111,8 +111,8 @@ class GraphWidget(BaseWidget):
         self.header = QLabel(title)
         self.header.setStyleSheet(f"""
             QLabel {{
-                color: {theme.get_color("text_small").name()};
-                font-size: 12px;
+                color: {theme.get_color("color_font_secondary").name()};
+                font-size: {theme.get_font_size_secondary()}px;
                 font-weight: 400;
             }}
         """)
@@ -137,6 +137,18 @@ class GraphWidget(BaseWidget):
         
         # Initial update
         self.update_display()
+        self._update_style()
+
+    def _update_style(self):
+        """Update the style of the widget when the theme changes."""
+        self.header.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.get_color("color_font_secondary").name()};
+                font-size: {theme.get_font_size_secondary()}px;
+                font-weight: 400;
+            }}
+        """)
+        self.graph_area.update()
 
     def update_display(self):
         """Update the graph with latest history values."""
@@ -155,9 +167,9 @@ class GraphWidget(BaseWidget):
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""
         if self.color_scheme == 'B':
-            color_key = "chart_2"
+            color_key = "color_accent_2"
         elif self.color_scheme == 'C':
-            color_key = "chart_3"
+            color_key = "color_accent_3"
         else:
-            color_key = "chart"
+            color_key = "color_accent_1"
         return theme.get_color(color_key) 

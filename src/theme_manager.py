@@ -15,11 +15,22 @@ class ThemeManager:
         try:
             with open(theme_path, 'r') as f:
                 self._themes = json.load(f)
-            self._current_theme = self._themes.get('light', {})  # Default to light theme
+            self._current_theme = self._themes.get('dark', {})  # Default to dark theme
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error loading themes: {e}")
             self._themes = {}
-            self._current_theme = {}
+            self._current_theme = {
+                "font_size_primary": 32,
+                "font_size_secondary": 16,
+                "color_font_primary": "#ffffff",
+                "color_font_secondary": "#d1d1d1",
+                "color_font_legend": "#555555",
+                "color_background": "#202020",
+                "color_widget": "#191919",
+                "color_accent_1": "#f59121",
+                "color_accent_2": "#9d2062",
+                "color_accent_3": "#39b8e3"
+            }
     
     def get_color(self, key: str) -> QColor:
         """Get a color from the current theme"""
@@ -45,9 +56,13 @@ class ThemeManager:
         else:
             print(f"Theme '{theme_name}' not found")
     
-    def get_font_size(self) -> int:
+    def get_font_size_primary(self) -> int:
         """Return the base font size from the current theme (defaulting to 32 if not specified)."""
-        return self._current_theme.get("font_size", 32)
+        return self._current_theme.get("font_size_primary", 32)
+
+    def get_font_size_secondary(self) -> int:
+        """Return the secondary font size from the current theme (defaulting to 12 if not specified)."""
+        return self._current_theme.get("font_size_secondary", 12)
 
 # Global theme manager instance
 theme = ThemeManager() 

@@ -35,8 +35,8 @@ class CircularProgressLabel(QWidget):
         """Update the label style with current theme colors"""
         self.value_label.setStyleSheet(f"""
             QLabel {{
-                color: {theme.get_color("text_big").name()};
-                font-size: {theme.get_font_size()}px;
+                color: {theme.get_color("color_font_primary").name()};
+                font-size: {theme.get_font_size_primary()}px;
                 font-weight: 500;
             }}
         """)
@@ -61,7 +61,7 @@ class CircularProgressLabel(QWidget):
         )
         
         # Draw background circle
-        background_color = theme.get_color("chart_legend")
+        background_color = theme.get_color("color_font_legend")
         background_color.setAlpha(40)
         painter.setPen(QPen(background_color, 4))
         painter.drawArc(rect, 0, 360 * 16)
@@ -115,13 +115,6 @@ class CircleWidget(BaseWidget):
         
         # Create header label
         self.header = QLabel(title)
-        self.header.setStyleSheet(f"""
-            QLabel {{
-                color: {theme.get_color("text_small").name()};
-                font-size: 12px;
-                font-weight: 400;
-            }}
-        """)
         self.header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         
         # Set anti-aliased font for header
@@ -143,6 +136,18 @@ class CircleWidget(BaseWidget):
         
         # Initial update
         self.update_display()
+        self._update_style()
+
+    def _update_style(self):
+        """Update the style of the widget when the theme changes."""
+        self.header.setStyleSheet(f"""
+            QLabel {{
+                color: {theme.get_color("color_font_secondary").name()};
+                font-size: {theme.get_font_size_secondary()}px;
+                font-weight: 400;
+            }}
+        """)
+        self.circular_progress._update_label_style()
     
     def update_display(self):
         """Update the displayed value and progress."""
@@ -169,9 +174,9 @@ class CircleWidget(BaseWidget):
     def _get_accent_color(self):
         """Get the appropriate accent color based on scheme"""
         if self.color_scheme == 'B':
-            color_key = "chart_2"
+            color_key = "color_accent_2"
         elif self.color_scheme == 'C':
-            color_key = "chart_3"
+            color_key = "color_accent_3"
         else:
-            color_key = "chart"
+            color_key = "color_accent_1"
         return theme.get_color(color_key) 
