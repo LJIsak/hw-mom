@@ -9,38 +9,36 @@ class RemoveButton(QPushButton):
         super().__init__("×", parent)  # Using × symbol for remove
         self.setObjectName("removeButton")
         self.setFixedSize(24, 24)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)  # Pointing cursor when hovering
         self._update_style()
         self.hide()  # Hidden by default, shown in edit mode
     
     def _update_style(self):
         """Update button style with current theme colors"""
-        base_color = theme.get_color("color_accent_2")
-        hover_color = QColor(
-            int(base_color.red() * 0.8),
-            int(base_color.green() * 0.8),
-            int(base_color.blue() * 0.8)
-        )
-        pressed_color = QColor(
-            int(hover_color.red() * 0.8),
-            int(hover_color.green() * 0.8),
-            int(hover_color.blue() * 0.8)
-        )
+        text_color = theme.get_color("color_font_secondary")
+        hover_bg = QColor(text_color)
+        hover_bg.setAlpha(50)  # Semi-transparent background on hover
+        pressed_bg = QColor(text_color)
+        pressed_bg.setAlpha(100)  # More visible on press
         
         self.setStyleSheet(f"""
             QPushButton#removeButton {{
-                background-color: {base_color.name()};
+                background-color: transparent;
                 border-radius: 12px;
-                color: white;
-                font-size: 16px;
+                color: {text_color.name()};
+                font-size: 22px;
                 font-weight: bold;
                 border: none;
+                padding: 0px;
                 padding-bottom: 4px;
             }}
             QPushButton#removeButton:hover {{
-                background-color: {hover_color.name()};
+                background-color: rgba({hover_bg.red()}, {hover_bg.green()}, {hover_bg.blue()}, {hover_bg.alpha()});
+                color: {text_color.name()};
             }}
             QPushButton#removeButton:pressed {{
-                background-color: {pressed_color.name()};
+                background-color: rgba({pressed_bg.red()}, {pressed_bg.green()}, {pressed_bg.blue()}, {pressed_bg.alpha()});
+                color: {text_color.name()};
             }}
         """)
 
@@ -88,7 +86,8 @@ class Card(QFrame):
         self.setGraphicsEffect(shadow)
         
         # Create remove button
-        # self.remove_btn = RemoveButton(self)
+        self.remove_btn = RemoveButton(self)
+        self.remove_btn.raise_()  # Ensure button is on top
         self._create_resize_handles()
     
     def set_draggable(self, draggable: bool):
@@ -98,6 +97,8 @@ class Card(QFrame):
     def set_edit_mode(self, in_edit_mode: bool):
         """Set the card's edit mode state."""
         self.is_in_edit_mode = in_edit_mode
+        # Show/hide remove button based on edit mode
+        self.remove_btn.setVisible(in_edit_mode)
         # Ensure handles are hidden when leaving edit mode
         if not in_edit_mode:
             self.set_resizable(False)
@@ -160,7 +161,13 @@ class Card(QFrame):
             drag.setMimeData(mime_data)
 
             # Create a semi-transparent pixmap of the widget for the drag preview
-            pixmap = QPixmap(self.size()*0.88)
+            # Adjust for card margins (16px on each side) to match landing preview size
+            margin = 16
+            pixmap_size = self.size()
+            pixmap_size.setWidth(pixmap_size.width() - 2 * margin)
+            pixmap_size.setHeight(pixmap_size.height() - 2 * margin)
+            
+            pixmap = QPixmap(pixmap_size)
             pixmap.fill(Qt.GlobalColor.transparent)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -178,7 +185,9 @@ class Card(QFrame):
             painter.end()
             
             drag.setPixmap(pixmap)
-            drag.setHotSpot(event.pos())
+            # Adjust hot spot to account for the margin offset
+            hot_spot = event.pos() - QPoint(margin, margin)
+            drag.setHotSpot(hot_spot)
 
             # Start the drag operation
             drag.exec(Qt.DropAction.MoveAction)
@@ -225,6 +234,7 @@ class Card(QFrame):
         """Handle resize of cards during edit mode."""
         super().resizeEvent(event)
         self._position_resize_handles()
+        self._position_remove_button()
 
     def _create_resize_handles(self):
         """Create resize handles for each edge."""
@@ -255,6 +265,14 @@ class Card(QFrame):
         for handle in self.handles:
             x, y = positions[handle.position]
             handle.move(x, y)
+    
+    def _position_remove_button(self):
+        """Position remove button in the upper right corner."""
+        margin = 16
+        button_size = self.remove_btn.width()
+        x = self.width() - margin - button_size
+        y = margin
+        self.remove_btn.move(x, y)
     
     def _emit_resize_started(self, position: str):
         """Emit resize_started signal."""

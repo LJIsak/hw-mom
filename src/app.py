@@ -14,11 +14,12 @@ from collectors.system_metrics import SystemMetrics
 from layout_parser import LayoutParser
 from pathlib import Path
 from typing import Optional
+from functools import partial
 
 
 class SettingsButton(QPushButton):
     def __init__(self, parent=None):
-        super().__init__("+", parent)
+        super().__init__("⚙", parent)
         self.setObjectName("settingsButton")
         self.setFixedSize(36, 36)
         self.setCheckable(True)
@@ -54,45 +55,6 @@ class SettingsButton(QPushButton):
             QPushButton#settingsButton:pressed, QPushButton#settingsButton:checked {{
                 background-color: {pressed_color.name()};
                 color: {text_color.name()};
-            }}
-        """)
-
-class AddCardButton(QPushButton):
-    def __init__(self, parent=None):
-        super().__init__("⚙", parent)
-        self.setObjectName("addCardButton")
-        self.setFixedSize(36, 36)
-        self._update_colors()
-    
-    def _update_colors(self):
-        # Get base color and create hover/pressed colors
-        base_color = theme.get_color("color_widget")
-        text_color = theme.get_color("color_font_secondary")
-        hover_color = QColor(
-            int(base_color.red() * 0.8),
-            int(base_color.green() * 0.8),
-            int(base_color.blue() * 0.8)
-        )
-        pressed_color = QColor(
-            int(hover_color.red() * 0.8),
-            int(hover_color.green() * 0.8),
-            int(hover_color.blue() * 0.8)
-        )
-        self.setStyleSheet(f"""
-            QPushButton#addCardButton {{
-                background-color: {base_color.name()};
-                border-radius: 18px;
-                color: {text_color.name()};
-                font-size: 20px;
-                font-weight: bold;
-                border: none;
-                padding-top: -4px;
-            }}
-            QPushButton#addCardButton:hover {{
-                background-color: {hover_color.name()};
-            }}
-            QPushButton#addCardButton:pressed {{
-                background-color: {pressed_color.name()};
             }}
         """)
 
@@ -137,6 +99,43 @@ class ThemeButton(QPushButton):
             }}
         """)
 
+
+class EmptyCellButton(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__("+", parent)
+        self.setObjectName("emptyCellButton")
+        self.setFixedSize(28, 28)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._update_colors()
+
+    def _update_colors(self):
+        text_color = theme.get_color("color_font_secondary")
+        accent_color = theme.get_color("color_accent_1")
+        hover_color = QColor(accent_color)
+        hover_color.setAlpha(200)
+        pressed_color = QColor(accent_color)
+        pressed_color.setAlpha(255)
+
+        self.setStyleSheet(f"""
+            QPushButton#emptyCellButton {{
+                background-color: transparent;
+                border: none;
+                border-radius: 14px;
+                color: {text_color.name()};
+                font-size: 20px;
+                font-weight: bold;
+                padding: 1px 3px 6px 3px;
+            }}
+            QPushButton#emptyCellButton:hover {{
+                background-color: rgba({hover_color.red()}, {hover_color.green()}, {hover_color.blue()}, {hover_color.alpha()});
+                color: {text_color.name()};
+            }}
+            QPushButton#emptyCellButton:pressed {{
+                background-color: rgba({pressed_color.red()}, {pressed_color.green()}, {pressed_color.blue()}, {pressed_color.alpha()});
+                color: {text_color.name()};
+            }}
+        """)
+
 class MainWindow(QMainWindow):  
     def __init__(self):
         super().__init__()
@@ -170,6 +169,8 @@ class MainWindow(QMainWindow):
         
         # Initialize grid tracking
         self.grid_positions = {}  # {(row, col): card_widget}
+        self.empty_cell_buttons = {}
+        self._empty_cell_refresh_queued = False
         
         # Track cards for edit mode
         self.cards = []
@@ -211,12 +212,6 @@ class MainWindow(QMainWindow):
     
     def _add_floating_buttons(self):
         """Add floating action buttons"""
-        # Add button
-        self.add_button = AddCardButton(self)
-        self.add_button.clicked.connect(self._add_card_from_dialog)
-        self.add_button.raise_()
-        self.add_button.hide()
-        
         # Edit mode button
         self.settings_button = SettingsButton(self)
         self.settings_button.clicked.connect(self._toggle_edit_mode)
@@ -242,14 +237,9 @@ class MainWindow(QMainWindow):
             margin_x_right - self.settings_button.width(), 
             margin_y - self.settings_button.height())
         
-        # Position add button to the left of the settings button
-        self.add_button.move(
-            self.settings_button.x() - self.add_button.width() - 12,
-            margin_y - self.add_button.height())
-
-        # Position theme button to the left of the add button
+        # Position theme button to the left of the settings button
         self.theme_button.move(
-            self.add_button.x() - self.theme_button.width() - 12, 
+            self.settings_button.x() - self.theme_button.width() - 12,
             margin_y - self.theme_button.height())
     
     def resizeEvent(self, event):
@@ -257,8 +247,7 @@ class MainWindow(QMainWindow):
         Handle window resize to reposition floating buttons and enforce equal grid cell sizes.
         """
         super().resizeEvent(event)
-        if hasattr(self, 'add_button'):
-            self._position_floating_buttons()
+        self._position_floating_buttons()
 
         # Enforce uniform grid cell sizes based on the current main widget size.
         margins = self.main_widget.layout().contentsMargins()
@@ -274,19 +263,19 @@ class MainWindow(QMainWindow):
             self.grid_layout.setRowMinimumHeight(row, int(cell_height))
         for col in range(self.grid_size[1]):
             self.grid_layout.setColumnMinimumWidth(col, int(cell_width))
+
+        self._refresh_empty_cell_buttons()
     
     def _toggle_edit_mode(self):
         """Toggle visibility of remove buttons on all cards"""
         show = self.settings_button.isChecked()
-        self.add_button.setVisible(show)
         self.theme_button.setVisible(show)
         for card in self.cards:
-            # if hasattr(card, 'remove_btn'):
-            #     card.remove_btn.setVisible(show)
             if hasattr(card, 'set_draggable'):
                 card.set_draggable(show)
             if hasattr(card, 'set_edit_mode'):
                 card.set_edit_mode(show)
+        self._refresh_empty_cell_buttons()
         
     def _toggle_theme(self):
         """Toggle between light and dark themes"""
@@ -311,10 +300,85 @@ class MainWindow(QMainWindow):
             card._update_style()
             
         # Update all buttons
-        self.add_button._update_colors()
         self.settings_button._update_colors()
         self.theme_button._update_colors()
+        for button in self.empty_cell_buttons.values():
+            button._update_colors()
         
+    def _refresh_empty_cell_buttons(self):
+        """Recreate or reposition add-card buttons for empty grid cells."""
+        if not hasattr(self, 'grid_layout'):
+            return
+
+        self._empty_cell_refresh_queued = False
+
+        layout_geom = self.grid_layout.geometry()
+        if layout_geom.width() <= 0 or layout_geom.height() <= 0:
+            self._queue_empty_cell_refresh()
+            return
+
+        show_buttons = getattr(self, 'settings_button', None) and self.settings_button.isChecked()
+
+        # Remove buttons that correspond to occupied or out-of-range cells
+        for pos, button in list(self.empty_cell_buttons.items()):
+            row, col = pos
+            if (
+                pos in self.grid_positions or
+                row >= self.grid_size[0] or
+                col >= self.grid_size[1]
+            ):
+                button.hide()
+                button.deleteLater()
+                del self.empty_cell_buttons[pos]
+
+        needs_retry = False
+
+        for row in range(self.grid_size[0]):
+            for col in range(self.grid_size[1]):
+                if (row, col) in self.grid_positions:
+                    continue
+
+                cell_rect = self.grid_layout.cellRect(row, col)
+                button = self.empty_cell_buttons.get((row, col))
+                if cell_rect.width() <= 0 or cell_rect.height() <= 0:
+                    needs_retry = True
+                    if button:
+                        button.setVisible(bool(show_buttons))
+                        if show_buttons:
+                            button.raise_()
+                    continue
+
+                if button is None:
+                    button = EmptyCellButton(self.main_widget)
+                    button.clicked.connect(partial(self._handle_empty_cell_clicked, row, col))
+                    self.empty_cell_buttons[(row, col)] = button
+
+                center = cell_rect.center()
+                button.move(
+                    layout_geom.x() + center.x() - button.width() // 2,
+                    layout_geom.y() + center.y() - button.height() // 2
+                )
+                button.setVisible(bool(show_buttons))
+                if show_buttons:
+                    button.raise_()
+
+        if not show_buttons:
+            for button in self.empty_cell_buttons.values():
+                button.hide()
+
+        if needs_retry:
+            self._queue_empty_cell_refresh()
+
+    def _queue_empty_cell_refresh(self):
+        """Schedule a deferred refresh for empty cell buttons."""
+        if not self._empty_cell_refresh_queued:
+            self._empty_cell_refresh_queued = True
+            QTimer.singleShot(0, self._refresh_empty_cell_buttons)
+
+    def _handle_empty_cell_clicked(self, row: int, col: int):
+        """Handle requests to add a card from an empty grid cell."""
+        self._add_card_from_dialog((row, col))
+
         
     def _get_widget_info(self, widget_type: str) -> type:
         """Get the widget class for a given widget type."""
@@ -340,9 +404,12 @@ class MainWindow(QMainWindow):
         # Return mapped title or fallback to formatted string
         return metric_titles.get(metric_str, metric_str.replace('_', ' ').title())
     
-    def _add_card_from_dialog(self):
+    def _add_card_from_dialog(self, initial_position: Optional[tuple[int, int]] = None):
         """Show dialog and add card based on user input"""
         dialog = AddCardDialog(self)
+        if initial_position:
+            dialog.row_pos_spin.setValue(initial_position[0] + 1)
+            dialog.col_pos_spin.setValue(initial_position[1] + 1)
         if dialog.exec():
             values = dialog.get_values()
             
@@ -363,6 +430,7 @@ class MainWindow(QMainWindow):
                 color_scheme=values['color_scheme'],
                 accent_scheme=values['accent_scheme']
             )
+            self._refresh_empty_cell_buttons()
 
     def _place_card(
             self, size, requested_position, widget_class, metric_str,
@@ -403,9 +471,16 @@ class MainWindow(QMainWindow):
         # Set size policy for all cards
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
+        # Ensure new cards inherit current edit mode and draggable state
+        is_edit_mode = self.settings_button.isChecked()
+        if hasattr(card, 'set_draggable'):
+            card.set_draggable(is_edit_mode)
+        if hasattr(card, 'set_edit_mode'):
+            card.set_edit_mode(is_edit_mode)
+
         # Add remove button and connect it
-        # card.remove_btn.clicked.connect(lambda: self._remove_card(card))
-        # card.remove_btn.setVisible(self.settings_button.isChecked())
+        card.remove_btn.clicked.connect(lambda: self._remove_card(card))
+        card.remove_btn.setVisible(self.settings_button.isChecked())
         
         # Add to grid and track position
         self.grid_layout.addWidget(card, row, col, size[0], size[1])
@@ -416,6 +491,7 @@ class MainWindow(QMainWindow):
                 self.grid_positions[(r, c)] = card
         
         self.cards.append(card)
+        self._refresh_empty_cell_buttons()
         # print(f"Added {widget_class.__name__} card at " 
         #       f"position ({row}, {col}) with size {size}") # Debug
 
@@ -434,6 +510,7 @@ class MainWindow(QMainWindow):
         self.cards.remove(card)
         self.grid_layout.removeWidget(card)
         card.deleteLater()
+        self._refresh_empty_cell_buttons()
 
     def _compactify_grid(self):
         """Remove empty rows and columns from the grid. Called after a card is removed."""
@@ -583,6 +660,7 @@ class MainWindow(QMainWindow):
         for r in range(target_row, target_row + row_span):
             for c in range(target_col, target_col + col_span):
                 self.grid_positions[(r, c)] = source_card
+        self._refresh_empty_cell_buttons()
         event.acceptProposedAction()
 
     def _handle_resize_started(self, card, position):
@@ -668,6 +746,7 @@ class MainWindow(QMainWindow):
         self.resize_handle_pos = None
         self.resize_start_geom = None
         self.current_resize_geom = None
+        self._refresh_empty_cell_buttons()
 
     def _update_resize_preview(self, r, c, rs, cs):
         """Update the geometry of the resize preview widget."""
@@ -751,6 +830,8 @@ class MainWindow(QMainWindow):
                 metric_str="cpu",
                 color_scheme='A'
             )
+        finally:
+            self._refresh_empty_cell_buttons()
 
     def _get_card_from_id(self, card_id: int) -> Optional[Card]:
         """Return the card instance matching the given object id, if any."""
